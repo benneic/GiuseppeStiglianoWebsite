@@ -265,7 +265,7 @@ export default function InteractiveAvatar() {
               <Button
                 size="md"
                 onClick={handleInterrupt}
-                className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white rounded-lg"
+                className="bg-primary-background text-white rounded-lg"
                 variant="shadow"
               >
                 Interrupt task
@@ -273,7 +273,7 @@ export default function InteractiveAvatar() {
               <Button
                 size="md"
                 onClick={endSession}
-                className="bg-gradient-to-tr from-indigo-500 to-indigo-300  text-white rounded-lg"
+                className="bg-primary-background  text-white rounded-lg"
                 variant="shadow"
               >
                 End session
@@ -305,7 +305,7 @@ export default function InteractiveAvatar() {
                       className={clsx(
                         "mr-4 text-white",
                         !recording
-                          ? "bg-gradient-to-tr from-indigo-500 to-indigo-300"
+                          ? "bg-primary-background"
                           : ""
                       )}
                       size="sm"
@@ -315,7 +315,7 @@ export default function InteractiveAvatar() {
                         <Microphone size={20} />
                       ) : (
                         <>
-                          <div className="absolute h-full w-full bg-gradient-to-tr from-indigo-500 to-indigo-300 animate-pulse -z-10"></div>
+                          <div className="absolute h-full w-full bg-primary-background animate-pulse -z-10"></div>
                           <MicrophoneStage size={20} />
                         </>
                       )}
@@ -334,7 +334,7 @@ export default function InteractiveAvatar() {
               <Button
                 size="md"
                 onClick={startSession}
-                className="bg-gradient-to-tr from-indigo-500 to-indigo-300 w-full text-white"
+                className="bg-primary-background w-full text-white"
                 variant="shadow"
               >
                 Start session

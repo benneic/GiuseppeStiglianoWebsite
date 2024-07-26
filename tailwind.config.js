@@ -37,6 +37,7 @@ module.exports = {
             primary: {
               //... 50 to 900
               foreground: "#FFFFFF",
+              background: "#E66119",
               DEFAULT: "#006FEE",
             },
             focus: "#BEF264"
