@@ -19,8 +19,8 @@ const fontMono = FontMono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HeyGen Interactive Avatar SDK Demo",
-    template: `%s - HeyGen Interactive Avatar SDK Demo`,
+    default: "Giuseppe Stigliano Website",
+    template: `%s - Giuseppe Stigliano Website`,
   },
   icons: {
     icon: "/heygen-logo.png",
@@ -43,15 +43,17 @@ export default function RootLayout({
     <html
       suppressHydrationWarning
       lang="en"
-      className={`${fontSans.variable} ${fontMono.variable} font-sans`}
+      className={`${fontSans.variable} ${fontMono.variable} font-sans h-full`}
     >
       <head />
-      <body className={clsx("min-h-screen bg-background antialiased")}>
+      <body className={clsx("h-full min-h-screen bg-background antialiased")}>
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <main className="relative flex flex-col h-screen w-screen">
+        <div className="min-h-full">
+          <main className="relative flex flex-col h-screen w-screen mx-auto max-w-7xl px-0 py-8 sm:px-6">
             <NavBar />
             {children}
           </main>
+        </div>
         </Providers>
       </body>
     </html>

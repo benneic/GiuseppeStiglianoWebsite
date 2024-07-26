@@ -1,3 +1,6 @@
+export const AVATAR_ID = "3a9fdc348147403598eda4fd4589ce60";
+export const VOICE_ID = "no voice provided";
+
 export const AVATARS = [
   {
     avatar_id: "Eric_public_pro2_20230608",

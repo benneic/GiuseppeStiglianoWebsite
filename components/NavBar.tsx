@@ -14,53 +14,49 @@ export default function NavBar() {
   return (
     <Navbar className="w-full">
       <NavbarBrand>
-        <Link isExternal aria-label="HeyGen" href="https://app.heygen.com/">
-          <HeyGenLogo />
+        <Link aria-label="Chat AI" href="/">
+          <button
+            type="button"
+            className="rounded-full bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900"
+          >
+            Chat With AI Giuseppe
+          </button>
         </Link>
-        <div className="bg-gradient-to-br from-sky-300 to-indigo-500 bg-clip-text ml-4">
-          <p className="text-xl font-semibold text-transparent">
-            HeyGen Interactive Avatar SDK NextJS Demo
-          </p>
-        </div>
       </NavbarBrand>
       <NavbarContent justify="center">
-        <NavbarItem className="flex flex-row items-center gap-4">
+        <NavbarItem className="isolate inline-flex rounded-full shadow-sm">
           <Link
-            isExternal
             color="foreground"
-            href="https://app.heygen.com/interactive-avatar"
+            href="/about#experience"
           >
-            Avatars
+            <button
+              type="button"
+              className="relative inline-flex items-center rounded-l-full bg-white pl-5 pr-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+            >
+              Experience
+            </button>
           </Link>
           <Link
-            isExternal
             color="foreground"
-            href="https://docs.heygen.com/reference/list-voices-v2"
+            href="/about#newsletter"
           >
-            Voices
+            <button
+              type="button"
+              className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+            >
+              Newsletter
+            </button>
           </Link>
           <Link
-            isExternal
             color="foreground"
-            href="https://docs.heygen.com/reference/new-session-copy"
+            href="/about#contact"
           >
-            API Docs
-          </Link>
-          <Link
-            isExternal
-            color="foreground"
-            href="https://help.heygen.com/en/articles/9182113-interactive-avatar-101-your-ultimate-guide"
-          >
-            Guide
-          </Link>
-          <Link
-            isExternal
-            aria-label="Github"
-            href="https://github.com/HeyGen-Official/StreamingAvatarSDK"
-            className="flex flex-row justify-center gap-1 text-foreground"
-          >
-            <GithubIcon className="text-default-500" />
-            SDK
+            <button
+              type="button"
+              className="relative -ml-px inline-flex items-center rounded-r-full bg-white pl-3 pr-5 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+            >
+              Contact
+            </button>
           </Link>
           <ThemeSwitch />
         </NavbarItem>

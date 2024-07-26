@@ -1,4 +1,4 @@
-import { AVATARS, VOICES } from "@/app/lib/constants";
+import { AVATAR_ID, VOICE_ID } from "@/app/lib/constants";
 import {
   Configuration,
   NewSessionData,
@@ -34,8 +34,6 @@ export default function InteractiveAvatar() {
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
-  const [avatarId, setAvatarId] = useState<string>("");
-  const [voiceId, setVoiceId] = useState<string>("");
   const [data, setData] = useState<NewSessionData>();
   const [text, setText] = useState<string>("");
   const [initialized, setInitialized] = useState(false); // Track initialization
@@ -94,12 +92,13 @@ export default function InteractiveAvatar() {
       return;
     }
     try {
+      console.log("Starting Avatar:", AVATAR_ID);
       const res = await avatar.current.createStartAvatar(
         {
           newSessionRequest: {
             quality: "low",
-            avatarName: avatarId,
-            voice: { voiceId: voiceId },
+            avatarName: AVATAR_ID,
+            //voice: { voiceId: voiceId },
           },
         },
         setDebug
@@ -109,7 +108,7 @@ export default function InteractiveAvatar() {
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(
-        `There was an error starting the session. ${voiceId ? "This custom voice ID may not be supported." : ""}`
+        `There was an error starting the session. ${VOICE_ID ? "This custom voice ID may not be supported." : ""}`
       );
     }
     setIsLoadingSession(false);
@@ -251,92 +250,87 @@ export default function InteractiveAvatar() {
 
   return (
     <div className="w-full flex flex-col gap-4">
-      <Card>
-        <CardBody className="h-[500px] flex flex-col justify-center items-center">
-          {stream ? (
-            <div className="h-[500px] w-[900px] justify-center items-center flex rounded-lg overflow-hidden">
-              <video
-                ref={mediaStream}
-                autoPlay
-                playsInline
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                }}
+      <div className="flex flex-col justify-center items-center">
+        {stream ? (
+          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative">
+            <video
+              ref={mediaStream}
+              autoPlay
+              playsInline
+              poster="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp"
+            >
+              <track kind="captions" />
+            </video>
+            <div className="flex flex-col gap-2 absolute top-3 right-3">
+              <Button
+                size="md"
+                onClick={handleInterrupt}
+                className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white rounded-lg"
+                variant="shadow"
               >
-                <track kind="captions" />
-              </video>
-              <div className="flex flex-col gap-2 absolute bottom-3 right-3">
-                <Button
-                  size="md"
-                  onClick={handleInterrupt}
-                  className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white rounded-lg"
-                  variant="shadow"
-                >
-                  Interrupt task
-                </Button>
-                <Button
-                  size="md"
-                  onClick={endSession}
-                  className="bg-gradient-to-tr from-indigo-500 to-indigo-300  text-white rounded-lg"
-                  variant="shadow"
-                >
-                  End session
-                </Button>
-              </div>
+                Interrupt task
+              </Button>
+              <Button
+                size="md"
+                onClick={endSession}
+                className="bg-gradient-to-tr from-indigo-500 to-indigo-300  text-white rounded-lg"
+                variant="shadow"
+              >
+                End session
+              </Button>
             </div>
-          ) : !isLoadingSession ? (
-            <div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-medium leading-none">
-                  Custom Avatar ID (optional)
-                </p>
-                <Input
-                  value={avatarId}
-                  onChange={(e) => setAvatarId(e.target.value)}
-                  placeholder="Enter a custom avatar ID"
-                />
-                <Select
-                  placeholder="Or select one from these example avatars"
-                  size="md"
-                  onChange={(e) => {
-                    setAvatarId(e.target.value);
-                  }}
-                >
-                  {AVATARS.map((avatar) => (
-                    <SelectItem
-                      key={avatar.avatar_id}
-                      textValue={avatar.avatar_id}
+            <div className="flex flex-col absolute bottom-6 min-w-full px-6">
+              <InteractiveAvatarTextInput
+                label="Chat"
+                placeholder="Chat with the avatar (uses ChatGPT)"
+                input={input}
+                onSubmit={() => {
+                  setIsLoadingChat(true);
+                  if (!input) {
+                    setDebug("Please enter text to send to ChatGPT");
+                    return;
+                  }
+                  handleSubmit();
+                }}
+                setInput={setInput}
+                loading={isLoadingChat}
+                endContent={
+                  <Tooltip
+                    content={!recording ? "Start recording" : "Stop recording"}
+                  >
+                    <Button
+                      onClick={!recording ? startRecording : stopRecording}
+                      isDisabled={!stream}
+                      isIconOnly
+                      className={clsx(
+                        "mr-4 text-white",
+                        !recording
+                          ? "bg-gradient-to-tr from-indigo-500 to-indigo-300"
+                          : ""
+                      )}
+                      size="sm"
+                      variant="shadow"
                     >
-                      {avatar.name}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-medium leading-none">
-                  Custom Voice ID (optional)
-                </p>
-                <Input
-                  value={voiceId}
-                  onChange={(e) => setVoiceId(e.target.value)}
-                  placeholder="Enter a custom voice ID"
-                />
-                <Select
-                  placeholder="Or select one from these example voices"
-                  size="md"
-                  onChange={(e) => {
-                    setVoiceId(e.target.value);
-                  }}
-                >
-                  {VOICES.map((voice) => (
-                    <SelectItem key={voice.voice_id} textValue={voice.voice_id}>
-                      {voice.name} | {voice.language} | {voice.gender}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
+                      {!recording ? (
+                        <Microphone size={20} />
+                      ) : (
+                        <>
+                          <div className="absolute h-full w-full bg-gradient-to-tr from-indigo-500 to-indigo-300 animate-pulse -z-10"></div>
+                          <MicrophoneStage size={20} />
+                        </>
+                      )}
+                    </Button>
+                  </Tooltip>
+                }
+                disabled={!stream}
+              />
+            </div>
+          </div>
+        ) : !isLoadingSession ? (
+          //<div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
+          <div className="justify-center items-center flex rounded-lg overflow-hidden relative">
+            <img draggable="false" src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp" alt=""></img>
+            <div className="flex flex-col gap-2 absolute bottom-8">
               <Button
                 size="md"
                 onClick={startSession}
@@ -346,67 +340,16 @@ export default function InteractiveAvatar() {
                 Start session
               </Button>
             </div>
-          ) : (
-            <Spinner size="lg" color="default" />
-          )}
-        </CardBody>
-        <Divider />
-        <CardFooter className="flex flex-col gap-3">
-          <InteractiveAvatarTextInput
-            label="Repeat"
-            placeholder="Type something for the avatar to repeat"
-            input={text}
-            onSubmit={handleSpeak}
-            setInput={setText}
-            disabled={!stream}
-            loading={isLoadingRepeat}
-          />
-          <InteractiveAvatarTextInput
-            label="Chat"
-            placeholder="Chat with the avatar (uses ChatGPT)"
-            input={input}
-            onSubmit={() => {
-              setIsLoadingChat(true);
-              if (!input) {
-                setDebug("Please enter text to send to ChatGPT");
-                return;
-              }
-              handleSubmit();
-            }}
-            setInput={setInput}
-            loading={isLoadingChat}
-            endContent={
-              <Tooltip
-                content={!recording ? "Start recording" : "Stop recording"}
-              >
-                <Button
-                  onClick={!recording ? startRecording : stopRecording}
-                  isDisabled={!stream}
-                  isIconOnly
-                  className={clsx(
-                    "mr-4 text-white",
-                    !recording
-                      ? "bg-gradient-to-tr from-indigo-500 to-indigo-300"
-                      : ""
-                  )}
-                  size="sm"
-                  variant="shadow"
-                >
-                  {!recording ? (
-                    <Microphone size={20} />
-                  ) : (
-                    <>
-                      <div className="absolute h-full w-full bg-gradient-to-tr from-indigo-500 to-indigo-300 animate-pulse -z-10"></div>
-                      <MicrophoneStage size={20} />
-                    </>
-                  )}
-                </Button>
-              </Tooltip>
-            }
-            disabled={!stream}
-          />
-        </CardFooter>
-      </Card>
+          </div>
+        ) : (
+          <div className="justify-center items-center flex rounded-lg overflow-hidden relative">
+            <img draggable="false" src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp" alt=""></img>
+            <div className="flex justify-center items-center absolute">
+              <Spinner size="lg" color="danger" />
+            </div>
+          </div>
+        )}
+      </div>
       <p className="font-mono text-right">
         <span className="font-bold">Console:</span>
         <br />
