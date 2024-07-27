@@ -1,4 +1,4 @@
-import { AVATAR_ID, VOICE_ID } from "@/app/lib/constants";
+import { AVATAR_ID, VOICE_ID, PROMPT } from "@/app/lib/constants";
 import {
   Configuration,
   NewSessionData,
@@ -42,6 +42,8 @@ export default function InteractiveAvatar() {
   const avatar = useRef<StreamingAvatarApi | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
+
+
   const { input, setInput, handleSubmit } = useChat({
     onFinish: async (message) => {
       console.log("ChatGPT Response:", message);
@@ -65,7 +67,7 @@ export default function InteractiveAvatar() {
       {
         id: "1",
         role: "system",
-        content: "You are a helpful assistant.",
+        content: PROMPT,
       },
     ],
   });
@@ -96,7 +98,7 @@ export default function InteractiveAvatar() {
       const res = await avatar.current.createStartAvatar(
         {
           newSessionRequest: {
-            quality: "low",
+            quality: "high",
             avatarName: AVATAR_ID,
             //voice: { voiceId: voiceId },
           },
@@ -153,25 +155,24 @@ export default function InteractiveAvatar() {
       setDebug("Avatar API not initialized");
       return;
     }
+    if (recording) {
+      stopRecording();
+    }
+    if(isLoadingChat) {
+      setIsLoadingChat(false);
+    }
     await avatar.current.stopAvatar(
       { stopSessionRequest: { sessionId: data?.sessionId } },
       setDebug
     );
     setStream(undefined);
-  }
-
-  async function handleSpeak() {
-    setIsLoadingRepeat(true);
-    if (!initialized || !avatar.current) {
-      setDebug("Avatar API not initialized");
-      return;
-    }
-    await avatar.current
-      .speak({ taskRequest: { text: text, sessionId: data?.sessionId } })
-      .catch((e) => {
-        setDebug(e.message);
-      });
-    setIsLoadingRepeat(false);
+    // stop all voice recording
+    navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(streams=> {
+        streams.getTracks().forEach(track=>{
+            track.stop();
+        });
+    })
   }
 
   useEffect(() => {
