@@ -30,12 +30,10 @@ const openai = new OpenAI({
 
 export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
-  const [isLoadingRepeat, setIsLoadingRepeat] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [data, setData] = useState<NewSessionData>();
-  const [text, setText] = useState<string>("");
   const [initialized, setInitialized] = useState(false); // Track initialization
   const [recording, setRecording] = useState(false); // Track recording state
   const mediaStream = useRef<HTMLVideoElement>(null);
@@ -44,7 +42,7 @@ export default function InteractiveAvatar() {
   const audioChunks = useRef<Blob[]>([]);
 
 
-  const { input, setInput, handleSubmit } = useChat({
+  const { messages, input, setInput, handleSubmit } = useChat({
     onFinish: async (message) => {
       console.log("ChatGPT Response:", message);
 
@@ -157,6 +155,7 @@ export default function InteractiveAvatar() {
     }
     if (recording) {
       stopRecording();
+      mediaRecorder.current = null;
     }
     if(isLoadingChat) {
       setIsLoadingChat(false);
@@ -243,7 +242,10 @@ export default function InteractiveAvatar() {
       });
       const transcription = response.text;
       console.log("Transcription: ", transcription);
+
+      // sends the transcript to ChatGPT and on completion sends to the HeyGen Avatar
       setInput(transcription);
+
     } catch (error) {
       console.error("Error transcribing audio:", error);
     }
