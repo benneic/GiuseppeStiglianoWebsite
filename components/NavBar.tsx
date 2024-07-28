@@ -6,24 +6,34 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
+  Divider,
+  Button
 } from "@nextui-org/react";
 import { GithubIcon, HeyGenLogo } from "./Icons";
-import { ThemeSwitch } from "./ThemeSwitch";
+import { useState } from "react";
 
 export default function NavBar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <Navbar className="w-full">
-      <NavbarBrand>
-        <Link aria-label="Chat AI" href="/">
-          <button
-            type="button"
-            className="rounded-full bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900"
-          >
-            Chat With AI Giuseppe
-          </button>
-        </Link>
-      </NavbarBrand>
-      <NavbarContent justify="center">
+    <Navbar onMenuOpenChange={setIsMenuOpen} className="pt-4">
+      <NavbarContent justify="start" className="pr-3" >
+        <NavbarBrand>
+          <Link aria-label="Chat AI" href="/">
+            <button
+              type="button"
+              className="rounded-full bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900"
+            >
+              Chat With AI Giuseppe
+            </button>
+          </Link>
+        </NavbarBrand>
+      </NavbarContent>
+
+      <NavbarContent justify="center" className="hidden sm:flex" >
         <NavbarItem className="isolate inline-flex rounded-full shadow-sm">
           <Link
             color="foreground"
@@ -58,9 +68,49 @@ export default function NavBar() {
               Contact
             </button>
           </Link>
-          <ThemeSwitch />
         </NavbarItem>
       </NavbarContent>
+
+      <NavbarContent justify="end" className="sm:hidden">
+        <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} />
+      </NavbarContent>
+
+      <NavbarMenu>
+          <NavbarMenuItem  className="pt-10">
+            <Link
+              className="w-full text-black text-4xl underline"
+              href="/about#experience"
+              size="lg"
+            >
+              Experience
+            </Link>
+          </NavbarMenuItem>
+          <NavbarMenuItem>
+            <Link
+              className="w-full text-black text-4xl underline"
+              href="/about#newsletter"
+              size="lg"
+            >
+              Newsletter
+            </Link>
+          </NavbarMenuItem>
+          <NavbarMenuItem>
+            <Link
+              className="w-full text-black text-4xl underline"
+              href="/about#contact"
+              size="lg"
+            >
+              Contact
+            </Link>
+          </NavbarMenuItem>
+          <Divider className="my-6" />
+          <div className="">
+            <Button size="lg" className="w-full rounded-full">
+              Contact Me
+            </Button>
+          </div>
+      </NavbarMenu>
+
     </Navbar>
   );
 }

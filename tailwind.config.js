@@ -40,7 +40,7 @@ module.exports = {
               background: "#E66119",
               DEFAULT: "#006FEE",
             },
-            focus: "#BEF264"
+            focus: "#BEF264",
           }
         }
       }
