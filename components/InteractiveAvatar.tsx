@@ -61,6 +61,7 @@ export default function InteractiveAvatar() {
           setDebug(e.message);
         });
       setIsLoadingChat(false);
+      console.log("Messages", messages)
     },
     initialMessages: [
       {
@@ -169,17 +170,17 @@ export default function InteractiveAvatar() {
       stopRecording();
       mediaRecorder.current = null;
     }
-    if(isLoadingChat) {
+    if (isLoadingChat) {
       setIsLoadingChat(false);
     }
 
     // stop all voice recording
     navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(streams=> {
-        streams.getTracks().forEach(track=>{
-            track.stop();
+      .then(streams => {
+        streams.getTracks().forEach(track => {
+          track.stop();
         });
-    })
+      })
 
     // stop avatar
     if (!initialized || !avatar.current) {
@@ -286,8 +287,9 @@ export default function InteractiveAvatar() {
     <div className="w-full flex flex-col gap-4">
       <div className="flex flex-col justify-center items-center">
         {stream ? (
-          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative">
+          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
             <video
+              className="w-full h-full object-cover"
               ref={mediaStream}
               autoPlay
               playsInline
@@ -295,6 +297,7 @@ export default function InteractiveAvatar() {
             >
               <track kind="captions" />
             </video>
+
             <div className="flex flex-col gap-2 absolute top-3 right-3">
               <Button
                 size="md"
@@ -313,84 +316,90 @@ export default function InteractiveAvatar() {
                 End session
               </Button>
             </div>
-            { isPlaying &&
-            <div className="flex flex-col absolute bottom-6 min-w-full px-6">
-              <InteractiveAvatarTextInput
-                label="Chat"
-                placeholder="Please type your query or record your voice using the microphone icon"
-                input={input}
-                onSubmit={() => {
-                  setIsLoadingChat(true);
-                  if (!input) {
-                    setDebug("Please enter text to chat with me");
-                    return;
-                  }
-                  handleSubmit();
-                }}
-                setInput={setInput}
-                loading={isLoadingChat}
-                endContent={
-                  <Tooltip
-                    content={!recording ? "Start recording" : "Stop recording"}
-                  >
-                    <Button
-                      onClick={!recording ? startRecording : stopRecording}
-                      isDisabled={!stream}
-                      isIconOnly
-                      className={clsx(
-                        "mr-4 text-white",
-                        !recording
-                          ? "bg-primary-background"
-                          : ""
-                      )}
-                      size="sm"
-                      variant="shadow"
+
+            {isPlaying &&
+              <div className="flex flex-col absolute bottom-6 min-w-full px-6">
+                <InteractiveAvatarTextInput
+                  label="Chat"
+                  placeholder="Please type your query or record your voice using the microphone icon"
+                  input={input}
+                  onSubmit={() => {
+                    setIsLoadingChat(true);
+                    if (!input) {
+                      setDebug("Please enter text to chat with me");
+                      return;
+                    }
+                    handleSubmit();
+                  }}
+                  setInput={setInput}
+                  loading={isLoadingChat}
+                  endContent={
+                    <Tooltip
+                      content={!recording ? "Start recording" : "Stop recording"}
                     >
-                      {!recording ? (
-                        <Microphone size={20} />
-                      ) : (
-                        <>
-                          <div className="absolute h-full w-full bg-primary-background animate-pulse -z-10"></div>
-                          <MicrophoneStage size={20} />
-                        </>
-                      )}
-                    </Button>
-                  </Tooltip>
-                }
-                disabled={!stream}
-              />
-            </div>
+                      <Button
+                        onClick={!recording ? startRecording : stopRecording}
+                        isDisabled={!stream}
+                        isIconOnly
+                        className={clsx(
+                          "mr-4 text-white",
+                          !recording
+                            ? "bg-primary-background"
+                            : ""
+                        )}
+                        size="sm"
+                        variant="shadow"
+                      >
+                        {!recording ? (
+                          <Microphone size={20} />
+                        ) : (
+                          <>
+                            <div className="absolute h-full w-full bg-primary-background animate-pulse -z-10"></div>
+                            <MicrophoneStage size={20} />
+                          </>
+                        )}
+                      </Button>
+                    </Tooltip>
+                  }
+                  disabled={!stream}
+                />
+              </div>
             }
           </div>
-        ) : !isLoadingSession ? (
-          //<div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
-          <div className="justify-center items-center flex rounded-lg overflow-hidden relative">
-            <img draggable="false" src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp" alt=""></img>
-            <div className="flex flex-col gap-2 absolute bottom-8">
-              <Button
-                size="md"
-                onClick={startSession}
-                className="bg-primary-background w-full text-white"
-                variant="shadow"
-              >
-                Start session
-              </Button>
-            </div>
-          </div>
         ) : (
-          <div className="justify-center items-center flex rounded-lg overflow-hidden relative">
-            <img draggable="false" src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp" alt=""></img>
-            <div className="flex justify-center items-center absolute">
-              <Spinner size="lg" color="danger" />
-            </div>
+          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
+            <img
+              className="w-full h-full object-cover"
+              draggable="false"
+              src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp"
+              alt="">
+            </img>
+            {isLoadingSession ? (
+              <div className="flex justify-center items-center absolute">
+                <Spinner size="lg" color="danger" />
+              </div>
+            ) :
+              (
+                <div className="flex flex-col gap-2 absolute bottom-8">
+                  <Button
+                    size="md"
+                    onClick={startSession}
+                    className="bg-primary-background w-full text-white"
+                    variant="shadow"
+                  >
+                    Start session
+                  </Button>
+                </div>
+              )}
           </div>
         )}
       </div>
-      <p className="font-mono text-right">
-        <span className="font-bold">Console:</span>
-        <br />
-        {debug}
-      </p>
+      <div className="justify-center items-center flex overflow-hidden w-full max-w-full">
+        <article className="text-wrap font-mono text-left w-full">
+          <h3>Transcript</h3>
+          <p className="max-w-fit">{}</p>
+        </article>
+      </div>
     </div>
   );
 }
