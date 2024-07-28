@@ -1,6 +1,8 @@
 export const AVATAR_ID = "3a9fdc348147403598eda4fd4589ce60";
 export const VOICE_ID = "no voice provided";
 
+export const WELCOME = "Hi, I am the digital twin of Giuseppe Stigliano. I am trained on his knowledge and can assist you with your marketing & communications queries. I can also explain the services the real Giuseppe can offer your business. Perhaps we could start with your name?";
+
 export const PROMPT = `
 PERSONA:
 

@@ -1,4 +1,4 @@
-import { AVATAR_ID, VOICE_ID, PROMPT } from "@/app/lib/constants";
+import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
 import {
   Configuration,
   NewSessionData,
@@ -31,9 +31,10 @@ const openai = new OpenAI({
 export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
-  const [data, setData] = useState<NewSessionData>();
+  const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
   const [initialized, setInitialized] = useState(false); // Track initialization
   const [recording, setRecording] = useState(false); // Track recording state
   const mediaStream = useRef<HTMLVideoElement>(null);
@@ -54,7 +55,7 @@ export default function InteractiveAvatar() {
       //send the ChatGPT response to the Interactive Avatar
       await avatar.current
         .speak({
-          taskRequest: { text: message.content, sessionId: data?.sessionId },
+          taskRequest: { text: message.content, sessionId: avatarSessionData?.sessionId },
         })
         .catch((e) => {
           setDebug(e.message);
@@ -103,7 +104,7 @@ export default function InteractiveAvatar() {
         },
         setDebug
       );
-      setData(res);
+      setAvatarSessionData(res);
       setStream(avatar.current.mediaStream);
     } catch (error) {
       console.error("Error starting avatar session:", error);
@@ -113,6 +114,19 @@ export default function InteractiveAvatar() {
     }
     setIsLoadingSession(false);
   }
+
+  async function speakWelcomeMessage() {
+    if (!initialized || !avatar.current) {
+      console.error("Avatar not ready yet");
+      return;
+    }
+    await avatar.current
+      .speak({ taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId } })
+      .catch((e) => {
+        setDebug(e.message);
+      });
+  }
+
 
   async function updateToken() {
     const newToken = await fetchAccessToken();
@@ -142,17 +156,15 @@ export default function InteractiveAvatar() {
       return;
     }
     await avatar.current
-      .interrupt({ interruptRequest: { sessionId: data?.sessionId } })
+      .interrupt({ interruptRequest: { sessionId: avatarSessionData?.sessionId } })
       .catch((e) => {
         setDebug(e.message);
       });
   }
 
   async function endSession() {
-    if (!initialized || !avatar.current) {
-      setDebug("Avatar API not initialized");
-      return;
-    }
+    setIsPlaying(false);
+
     if (recording) {
       stopRecording();
       mediaRecorder.current = null;
@@ -160,11 +172,7 @@ export default function InteractiveAvatar() {
     if(isLoadingChat) {
       setIsLoadingChat(false);
     }
-    await avatar.current.stopAvatar(
-      { stopSessionRequest: { sessionId: data?.sessionId } },
-      setDebug
-    );
-    setStream(undefined);
+
     // stop all voice recording
     navigator.mediaDevices.getUserMedia({ audio: true })
     .then(streams=> {
@@ -172,6 +180,17 @@ export default function InteractiveAvatar() {
             track.stop();
         });
     })
+
+    // stop avatar
+    if (!initialized || !avatar.current) {
+      setDebug("Avatar API not initialized");
+      return;
+    }
+    await avatar.current.stopAvatar(
+      { stopSessionRequest: { sessionId: avatarSessionData?.sessionId } },
+      setDebug
+    );
+    setStream(undefined);
   }
 
   useEffect(() => {
@@ -195,10 +214,22 @@ export default function InteractiveAvatar() {
       mediaStream.current.srcObject = stream;
       mediaStream.current.onloadedmetadata = () => {
         mediaStream.current!.play();
+        setIsPlaying(true);
         setDebug("Playing");
+        speakWelcomeMessage();
       };
     }
   }, [mediaStream, stream]);
+
+  useEffect(() => {
+    // hacky work around, SDK needs events for connection state
+    if (debug == "ICE connection state changed to: disconnected") {
+      endSession();
+    }
+  }, [debug]);
+
+
+
 
   function startRecording() {
     navigator.mediaDevices
@@ -282,15 +313,16 @@ export default function InteractiveAvatar() {
                 End session
               </Button>
             </div>
+            { isPlaying &&
             <div className="flex flex-col absolute bottom-6 min-w-full px-6">
               <InteractiveAvatarTextInput
                 label="Chat"
-                placeholder="Chat with the avatar (uses ChatGPT)"
+                placeholder="Please type your query or record your voice using the microphone icon"
                 input={input}
                 onSubmit={() => {
                   setIsLoadingChat(true);
                   if (!input) {
-                    setDebug("Please enter text to send to ChatGPT");
+                    setDebug("Please enter text to chat with me");
                     return;
                   }
                   handleSubmit();
@@ -328,6 +360,7 @@ export default function InteractiveAvatar() {
                 disabled={!stream}
               />
             </div>
+            }
           </div>
         ) : !isLoadingSession ? (
           //<div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
