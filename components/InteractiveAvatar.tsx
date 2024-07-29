@@ -42,6 +42,7 @@ export default function InteractiveAvatar() {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
 
+  const previewImage = "https://files2.heygen.ai/avatar/v3/" + AVATAR_ID + "/full/2.2/preview_target.webp";
 
   const { messages, input, setInput, handleSubmit } = useChat({
     onFinish: async (message) => {
@@ -303,7 +304,7 @@ export default function InteractiveAvatar() {
               ref={mediaStream}
               autoPlay
               playsInline
-              poster="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp"
+              poster={previewImage}
             >
               <track kind="captions" />
             </video>
@@ -331,7 +332,7 @@ export default function InteractiveAvatar() {
               <div className="flex flex-col absolute bottom-6 min-w-full px-6">
                 <InteractiveAvatarTextInput
                   label="Chat"
-                  placeholder="Please type your query or record your voice using the microphone icon"
+                  placeholder="Please type or record your voice"
                   input={input}
                   onSubmit={() => {
                     setIsLoadingChat(true);
@@ -381,8 +382,8 @@ export default function InteractiveAvatar() {
             <img
               className="w-full h-full object-cover"
               draggable="false"
-              src="https://files2.heygen.ai/avatar/v3/3a9fdc348147403598eda4fd4589ce60/full/2.2/preview_target.webp"
-              alt="">
+              src={previewImage}
+              alt="Giuseppe avatar">
             </img>
             {isLoadingSession ? (
               <div className="flex justify-center items-center absolute">
