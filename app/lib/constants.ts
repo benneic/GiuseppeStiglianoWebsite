@@ -1,5 +1,7 @@
-export const AVATAR_ID = "3a9fdc348147403598eda4fd4589ce60";
-export const VOICE_ID = "no voice provided";
+//export const AVATAR_ID = "3a9fdc348147403598eda4fd4589ce60"; // OLD
+export const AVATAR_ID = "2ede931b120d4af89c93e14dee9e7e3b"; // NEW 2024-07-29
+
+export const VOICE_ID = "a3ff88c468d841aca47d6b683ccb9171";
 
 export const WELCOME = "Hi, I am the digital twin of Giuseppe Stigliano. I am trained on his knowledge and can assist you with your marketing & communications queries. I can also explain the services the real Giuseppe can offer your business. Perhaps we could start with your name?";
 

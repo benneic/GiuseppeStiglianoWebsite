@@ -100,7 +100,7 @@ export default function InteractiveAvatar() {
           newSessionRequest: {
             quality: "high",
             avatarName: AVATAR_ID,
-            //voice: { voiceId: voiceId },
+            voice: { voiceId: VOICE_ID },
           },
         },
         setDebug
@@ -237,16 +237,26 @@ export default function InteractiveAvatar() {
       .getUserMedia({ audio: true })
       .then((stream) => {
         mediaRecorder.current = new MediaRecorder(stream);
+
         mediaRecorder.current.ondataavailable = (event) => {
+          console.log('Recieved audio chunk', event.data)
           audioChunks.current.push(event.data);
         };
+
         mediaRecorder.current.onstop = () => {
           const audioBlob = new Blob(audioChunks.current, {
             type: "audio/wav",
           });
+          console.log('Audio recording stopped')
           audioChunks.current = [];
           transcribeAudio(audioBlob);
         };
+        /**
+        We can provide the timeslice param to start() method to specify number of milliseconds to record into each Blob.
+        Then ondataavailable method above will be called on each timeslice
+        We could then send each slice to whisper and see what it returns
+        https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start
+        **/
         mediaRecorder.current.start();
         setRecording(true);
       })
