@@ -15,7 +15,11 @@ import {
   Spinner,
   Tooltip,
 } from "@nextui-org/react";
-import { BracketsAngle, Microphone, MicrophoneStage } from "@phosphor-icons/react";
+import {
+  BracketsAngle,
+  Microphone,
+  MicrophoneStage,
+} from "@phosphor-icons/react";
 import { Close } from "@icon-park/react";
 import { useChat } from "ai/react";
 import clsx from "clsx";
@@ -25,6 +29,7 @@ import { useEffect, useRef, useState } from "react";
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
 import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
+import { splitString } from "@/app/lib/helpers";
 
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -60,19 +65,24 @@ export default function InteractiveAvatar() {
         return;
       }
 
-      //send the ChatGPT response to the Interactive Avatar
-      await avatar.current
-        .speak({
-          taskRequest: {
-            text: message.content,
-            sessionId: avatarSessionData?.sessionId,
-          },
-        })
-        .catch((e) => {
-          setDebug(e.message);
-        });
+      let dialogue = splitString(message.content, 1000);
+
+      for (const text of dialogue) {
+        //send the ChatGPT response to the Interactive Avatar
+        await avatar.current
+          .speak({
+            taskRequest: {
+              text: text,
+              sessionId: avatarSessionData?.sessionId,
+            },
+          })
+          .catch((e) => {
+            setDebug(e.message);
+          });
+      };
+
       setIsLoadingChat(false);
-      console.log("Messages", messages)
+      console.log("Messages", messages);
     },
     initialMessages: [
       {
@@ -112,10 +122,11 @@ export default function InteractiveAvatar() {
           newSessionRequest: {
             quality: "high",
             avatarName: AVATAR_ID,
-            voice: { voiceId: VOICE_ID },
+            voice: { voiceId: VOICE_ID, emotion: "Excited", rate: 0.96 },
+            knowledgeBase: PROMPT,
           },
         },
-        setDebug
+        setDebug,
       );
 
       setAvatarSessionData(res);
@@ -123,7 +134,7 @@ export default function InteractiveAvatar() {
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(
-        `There was an error starting the session. ${VOICE_ID ? "This custom voice ID may not be supported." : ""}`
+        `There was an error starting the session. ${VOICE_ID ? "This custom voice ID may not be supported." : ""}`,
       );
     }
     setIsLoadingSession(false);
@@ -153,14 +164,13 @@ export default function InteractiveAvatar() {
       });
   }
 
-
   async function updateToken() {
     const newToken = await fetchAccessToken();
 
     console.log("Updating Access Token:", newToken); // Log token for debugging
 
     avatar.current = new StreamingAvatarApi(
-      new Configuration({ accessToken: newToken })
+      new Configuration({ accessToken: newToken }),
     );
 
     const startTalkCallback = (e: any) => {
@@ -188,7 +198,9 @@ export default function InteractiveAvatar() {
       return;
     }
     await avatar.current
-      .interrupt({ interruptRequest: { sessionId: avatarSessionData?.sessionId } })
+      .interrupt({
+        interruptRequest: { sessionId: avatarSessionData?.sessionId },
+      })
       .catch((e) => {
         setDebug(e.message);
       });
@@ -213,7 +225,7 @@ export default function InteractiveAvatar() {
     }
     await avatar.current.stopAvatar(
       { stopSessionRequest: { sessionId: avatarSessionData?.sessionId } },
-      setDebug
+      setDebug,
     );
     setStream(undefined);
   }
@@ -223,7 +235,7 @@ export default function InteractiveAvatar() {
       const newToken = await fetchAccessToken();
       console.log("Initializing with Access Token:", newToken); // Log token for debugging
       avatar.current = new StreamingAvatarApi(
-        new Configuration({ accessToken: newToken, jitterBuffer: 200 })
+        new Configuration({ accessToken: newToken, jitterBuffer: 200 }),
       );
       setInitialized(true); // Set initialized to true
     }
@@ -276,7 +288,7 @@ export default function InteractiveAvatar() {
         mediaRecorder.current = new MediaRecorder(stream);
 
         mediaRecorder.current.ondataavailable = (event) => {
-          console.log('Recieved audio chunk', event.data)
+          console.log("Recieved audio chunk", event.data);
           audioChunks.current.push(event.data);
         };
 
@@ -284,7 +296,7 @@ export default function InteractiveAvatar() {
           const audioBlob = new Blob(audioChunks.current, {
             type: "audio/wav",
           });
-          console.log('Audio recording stopped')
+          console.log("Audio recording stopped");
           audioChunks.current = [];
           transcribeAudio(audioBlob);
         };
@@ -335,7 +347,6 @@ export default function InteractiveAvatar() {
 
       // sends the transcript to ChatGPT and on completion sends to the HeyGen Avatar
       setInput(transcription);
-
     } catch (error) {
       console.error("Error transcribing audio:", error);
     }

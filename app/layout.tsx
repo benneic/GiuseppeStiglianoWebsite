@@ -1,10 +1,9 @@
 import "@/styles/globals.css";
 import clsx from "clsx";
 import { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 
 import { Providers } from "./providers";
-
-import localFont from 'next/font/local'
 
 import NavBar from "@/components/NavBar";
 
@@ -12,24 +11,24 @@ const neueMontrealFont = localFont({
   variable: "--font-sans",
   src: [
     {
-      path: './lib/PPNeueMontreal-Medium.otf',
-      weight: '500',
-      style: 'normal',
+      path: "./lib/PPNeueMontreal-Medium.otf",
+      weight: "500",
+      style: "normal",
     },
     {
-      path: './lib/PPNeueMontreal-Italic.otf',
-      weight: '500',
-      style: 'italic',
+      path: "./lib/PPNeueMontreal-Italic.otf",
+      weight: "500",
+      style: "italic",
     },
     {
-      path: './lib/PPNeueMontreal-Bold.otf',
-      weight: '700',
-      style: 'normal',
+      path: "./lib/PPNeueMontreal-Bold.otf",
+      weight: "700",
+      style: "normal",
     },
     {
-      path: './lib/PPNeueMontreal-SemiBolditalic.otf',
-      weight: '700',
-      style: 'italic',
+      path: "./lib/PPNeueMontreal-SemiBolditalic.otf",
+      weight: "700",
+      style: "italic",
     },
   ],
 });
@@ -59,18 +58,18 @@ export default function RootLayout({
   return (
     <html
       suppressHydrationWarning
-      lang="en"
       className={`${neueMontrealFont.className} h-full`}
+      lang="en"
     >
       <head />
       <body className={clsx("h-full min-h-screen bg-background antialiased")}>
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-        <div className="min-h-full">
-          <main className="relative flex flex-col h-screen w-screen mx-auto max-w-7xl px-0 sm:px-6">
-            <NavBar />
-            {children}
-          </main>
-        </div>
+          <div className="min-h-full">
+            <main className="relative flex flex-col h-screen w-screen mx-auto max-w-7xl px-0 sm:px-6">
+              <NavBar />
+              {children}
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
