@@ -20,7 +20,7 @@ import {
   Microphone,
   MicrophoneStage,
 } from "@phosphor-icons/react";
-import { Close } from "@icon-park/react";
+import { ArrowUp, Close } from "@icon-park/react";
 import { useChat } from "ai/react";
 import clsx from "clsx";
 import OpenAI from "openai";
@@ -345,7 +345,7 @@ export default function InteractiveAvatar() {
       const transcription = response.text;
       console.log("Transcription: ", transcription);
 
-      // sends the transcript to ChatGPT and on completion sends to the HeyGen Avatar
+      // set the translation into the input field
       setInput(transcription);
     } catch (error) {
       console.error("Error transcribing audio:", error);
@@ -401,7 +401,7 @@ export default function InteractiveAvatar() {
                           )}
                           isDisabled={!stream}
                           size="lg"
-                          variant="shadow"
+                          variant="solid"
                           onClick={
                             !isRecording ? startRecording : stopRecording
                           }
@@ -411,7 +411,7 @@ export default function InteractiveAvatar() {
                           ) : (
                             <>
                               <div className="absolute h-full w-full bg-primary animate-pulse -z-10" />
-                              <MicrophoneStage size={20} />
+                              <ArrowUp theme="outline" size="20" />
                             </>
                           )}
                         </Button>
