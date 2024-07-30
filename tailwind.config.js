@@ -26,6 +26,7 @@ module.exports = {
             primary: {
               //... 50 to 900
               foreground: "#FFFFFF",
+              background: "#006FEE",
               DEFAULT: "#006FEE",
             }
           }
@@ -37,7 +38,7 @@ module.exports = {
             primary: {
               //... 50 to 900
               foreground: "#FFFFFF",
-              background: "#E66119",
+              background: "#006FEE",
               DEFAULT: "#006FEE",
             },
             focus: "#BEF264",

@@ -64,7 +64,7 @@ export default function RootLayout({
     >
       <head />
       <body className={clsx("h-full min-h-screen bg-background antialiased")}>
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
         <div className="min-h-full">
           <main className="relative flex flex-col h-screen w-screen mx-auto max-w-7xl px-0 sm:px-6">
             <NavBar />

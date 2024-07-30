@@ -345,7 +345,7 @@ export default function InteractiveAvatar() {
     <div className="w-full flex flex-col gap-4">
       <div className="flex flex-col justify-center items-center">
         {stream ? (
-          <div className="relative flex h-[80vh] max-w-full flex-1 flex-col justify-center items-center rounded-none sm:rounded-lg overflow-hidden sm:h-auto sm:aspect-video">
+          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
             <video
               ref={mediaStream}
               autoPlay
@@ -376,7 +376,11 @@ export default function InteractiveAvatar() {
                     disabled={!stream}
                     endContent={
                       <Tooltip
-                        content={!isRecording ? "Start recording" : "Stop recording"}
+                        color="foreground"
+                        content={
+                          !isRecording ? "Chat with voice" : "Stop recording"
+                        }
+                        showArrow={true}
                       >
                         <Button
                           isIconOnly
@@ -387,7 +391,9 @@ export default function InteractiveAvatar() {
                           isDisabled={!stream}
                           size="lg"
                           variant="shadow"
-                          onClick={!isRecording ? startRecording : stopRecording}
+                          onClick={
+                            !isRecording ? startRecording : stopRecording
+                          }
                         >
                           {!isRecording ? (
                             <Microphone size={20} />
@@ -403,6 +409,7 @@ export default function InteractiveAvatar() {
                     input={input}
                     loading={isLoadingChat}
                     placeholder="Type your message or press the mic to talk"
+                    recording={isRecording}
                     setInput={setInput}
                     onSubmit={() => {
                       setIsLoadingChat(true);
