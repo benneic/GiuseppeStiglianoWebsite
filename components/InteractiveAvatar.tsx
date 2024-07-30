@@ -406,9 +406,9 @@ export default function InteractiveAvatar() {
         )}
       </div>
       <div className="justify-center items-center flex overflow-hidden w-full max-w-full">
-        <article className="text-wrap font-mono text-left w-full">
+        <article className="text-wrap text-left w-full">
           <h3>Transcript</h3>
-          <p className="max-w-fit">{}</p>
+          <p className="max-w-fit font-sans">{}</p>
         </article>
       </div>
     </div>

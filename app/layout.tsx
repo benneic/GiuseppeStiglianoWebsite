@@ -4,26 +4,43 @@ import { Metadata, Viewport } from "next";
 
 import { Providers } from "./providers";
 
-import { Fira_Code as FontMono, Inter as FontSans } from "next/font/google";
+import localFont from 'next/font/local'
+
 import NavBar from "@/components/NavBar";
 
-const fontSans = FontSans({
-  subsets: ["latin"],
+const neueMontrealFont = localFont({
   variable: "--font-sans",
-});
-
-const fontMono = FontMono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
+  src: [
+    {
+      path: './lib/PPNeueMontreal-Medium.otf',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: './lib/PPNeueMontreal-Italic.otf',
+      weight: '500',
+      style: 'italic',
+    },
+    {
+      path: './lib/PPNeueMontreal-Bold.otf',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: './lib/PPNeueMontreal-SemiBolditalic.otf',
+      weight: '700',
+      style: 'italic',
+    },
+  ],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Giuseppe Stigliano Website",
-    template: `%s - Giuseppe Stigliano Website`,
+    default: "Giuseppe Stigliano AI Avatar",
+    template: `%s - Giuseppe Stigliano AI Avatar`,
   },
   icons: {
-    icon: "/heygen-logo.png",
+    icon: "/GS_favicon.ico",
   },
 };
 
@@ -43,7 +60,7 @@ export default function RootLayout({
     <html
       suppressHydrationWarning
       lang="en"
-      className={`${fontSans.variable} ${fontMono.variable} font-sans h-full`}
+      className={`${neueMontrealFont.className} h-full`}
     >
       <head />
       <body className={clsx("h-full min-h-screen bg-background antialiased")}>
