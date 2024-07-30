@@ -41,7 +41,7 @@ export default function NavBar() {
           >
             <button
               type="button"
-              className="relative inline-flex items-center rounded-l-full bg-white pl-5 pr-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+              className="relative inline-flex items-center rounded-l-full bg-white pl-5 pr-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
             >
               Experience
             </button>
@@ -52,7 +52,7 @@ export default function NavBar() {
           >
             <button
               type="button"
-              className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+              className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
             >
               Newsletter
             </button>
@@ -63,7 +63,7 @@ export default function NavBar() {
           >
             <button
               type="button"
-              className="relative -ml-px inline-flex items-center rounded-r-full bg-white pl-3 pr-5 py-2 text-sm text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10"
+              className="relative -ml-px inline-flex items-center rounded-r-full bg-white pl-3 pr-5 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
             >
               Contact
             </button>

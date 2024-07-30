@@ -1,4 +1,3 @@
-import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
 import {
   Configuration,
   NewSessionData,
@@ -16,12 +15,16 @@ import {
   Spinner,
   Tooltip,
 } from "@nextui-org/react";
-import { Microphone, MicrophoneStage } from "@phosphor-icons/react";
+import { BracketsAngle, Microphone, MicrophoneStage } from "@phosphor-icons/react";
+import { Close } from "@icon-park/react";
 import { useChat } from "ai/react";
 import clsx from "clsx";
 import OpenAI from "openai";
 import { useEffect, useRef, useState } from "react";
+
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
+
+import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
 
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -32,17 +35,20 @@ export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState(false); // Track recording state
+  const [isRecordingWaiting, setIsRecordingWaiting] = useState(false); // Track if we are waiting for avatar to stop speking before recording
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
+  const [help, setHelp] = useState<string>();
   const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
   const [initialized, setInitialized] = useState(false); // Track initialization
-  const [recording, setRecording] = useState(false); // Track recording state
   const mediaStream = useRef<HTMLVideoElement>(null);
   const avatar = useRef<StreamingAvatarApi | null>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
 
-  const previewImage = "https://files2.heygen.ai/avatar/v3/" + AVATAR_ID + "/full/2.2/preview_target.webp";
+  const previewImage = "/giuseppe-landscape.png";
 
   const { messages, input, setInput, handleSubmit } = useChat({
     onFinish: async (message) => {
@@ -50,13 +56,17 @@ export default function InteractiveAvatar() {
 
       if (!initialized || !avatar.current) {
         setDebug("Avatar API not initialized");
+
         return;
       }
 
       //send the ChatGPT response to the Interactive Avatar
       await avatar.current
         .speak({
-          taskRequest: { text: message.content, sessionId: avatarSessionData?.sessionId },
+          taskRequest: {
+            text: message.content,
+            sessionId: avatarSessionData?.sessionId,
+          },
         })
         .catch((e) => {
           setDebug(e.message);
@@ -83,6 +93,7 @@ export default function InteractiveAvatar() {
       return token;
     } catch (error) {
       console.error("Error fetching access token:", error);
+
       return "";
     }
   }
@@ -106,6 +117,7 @@ export default function InteractiveAvatar() {
         },
         setDebug
       );
+
       setAvatarSessionData(res);
       setStream(avatar.current.mediaStream);
     } catch (error) {
@@ -122,8 +134,20 @@ export default function InteractiveAvatar() {
       console.error("Avatar not ready yet");
       return;
     }
+
+    // only say welcome message on first session
+    // otherwise get avatar to say hello again
+    if (messages.length > 1) {
+      setInput("Please say hello again");
+      handleSubmit();
+
+      return;
+    }
+
     await avatar.current
-      .speak({ taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId } })
+      .speak({
+        taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId },
+      })
       .catch((e) => {
         setDebug(e.message);
       });
@@ -132,17 +156,23 @@ export default function InteractiveAvatar() {
 
   async function updateToken() {
     const newToken = await fetchAccessToken();
+
     console.log("Updating Access Token:", newToken); // Log token for debugging
+
     avatar.current = new StreamingAvatarApi(
       new Configuration({ accessToken: newToken })
     );
 
     const startTalkCallback = (e: any) => {
       console.log("Avatar started talking", e);
+
+      setIsSpeaking(true);
     };
 
     const stopTalkCallback = (e: any) => {
       console.log("Avatar stopped talking", e);
+
+      setIsSpeaking(false);
     };
 
     console.log("Adding event handlers:", avatar.current);
@@ -167,7 +197,7 @@ export default function InteractiveAvatar() {
   async function endSession() {
     setIsPlaying(false);
 
-    if (recording) {
+    if (isRecording) {
       stopRecording();
       mediaRecorder.current = null;
     }
@@ -175,17 +205,10 @@ export default function InteractiveAvatar() {
       setIsLoadingChat(false);
     }
 
-    // stop all voice recording
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(streams => {
-        streams.getTracks().forEach(track => {
-          track.stop();
-        });
-      })
-
     // stop avatar
     if (!initialized || !avatar.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
     await avatar.current.stopAvatar(
@@ -230,10 +253,23 @@ export default function InteractiveAvatar() {
     }
   }, [debug]);
 
-
-
+  // if we were waiting to record while avatar was speaking
+  // check if it is time to record
+  useEffect(() => {
+    if (!isSpeaking && isRecordingWaiting) {
+      setIsRecordingWaiting(false);
+      startRecording();
+    }
+  }, [isSpeaking]);
 
   function startRecording() {
+    if (isSpeaking) {
+      setIsRecordingWaiting(true);
+      handleInterrupt();
+
+      return;
+    }
+
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
@@ -258,18 +294,29 @@ export default function InteractiveAvatar() {
         We could then send each slice to whisper and see what it returns
         https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start
         **/
-        mediaRecorder.current.start();
-        setRecording(true);
+        mediaRecorder.current.start(5000); // Chunk every 5 seconds
+        setIsRecording(true);
       })
       .catch((error) => {
         console.error("Error accessing microphone:", error);
+
+        setHelp(
+          "Error accessing microphone, please allow access via your address bar",
+        );
       });
   }
 
   function stopRecording() {
     if (mediaRecorder.current) {
       mediaRecorder.current.stop();
-      setRecording(false);
+      setIsRecording(false);
+
+      // stop all voice recording
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((streams) => {
+        streams.getTracks().forEach((track) => {
+          track.stop();
+        });
+      });
     }
   }
 
@@ -298,12 +345,12 @@ export default function InteractiveAvatar() {
     <div className="w-full flex flex-col gap-4">
       <div className="flex flex-col justify-center items-center">
         {stream ? (
-          <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
+          <div className="relative flex h-[80vh] max-w-full flex-1 flex-col justify-center items-center rounded-none sm:rounded-lg overflow-hidden sm:h-auto sm:aspect-video">
             <video
-              className="w-full h-full object-cover"
               ref={mediaStream}
               autoPlay
               playsInline
+              className="w-full h-full object-cover"
               poster={previewImage}
             >
               <track kind="captions" />
@@ -311,104 +358,97 @@ export default function InteractiveAvatar() {
 
             <div className="flex flex-col gap-2 absolute top-3 right-3">
               <Button
-                size="md"
-                onClick={handleInterrupt}
-                className="bg-primary-background text-white rounded-lg"
-                variant="shadow"
-              >
-                Interrupt task
-              </Button>
-              <Button
-                size="md"
+                color="default"
+                isIconOnly={true}
+                radius="md"
+                size="lg"
+                variant="light"
                 onClick={endSession}
-                className="bg-primary-background  text-white rounded-lg"
-                variant="shadow"
               >
-                End session
+                <Close />
               </Button>
             </div>
 
-            {isPlaying &&
-              <div className="flex flex-col absolute bottom-6 min-w-full px-6">
-                <InteractiveAvatarTextInput
-                  label="Chat"
-                  placeholder="Please type or record your voice"
-                  input={input}
-                  onSubmit={() => {
-                    setIsLoadingChat(true);
-                    if (!input) {
-                      setDebug("Please enter text to chat with me");
-                      return;
-                    }
-                    handleSubmit();
-                  }}
-                  setInput={setInput}
-                  loading={isLoadingChat}
-                  endContent={
-                    <Tooltip
-                      content={!recording ? "Start recording" : "Stop recording"}
-                    >
-                      <Button
-                        onClick={!recording ? startRecording : stopRecording}
-                        isDisabled={!stream}
-                        isIconOnly
-                        className={clsx(
-                          "mr-4 text-white",
-                          !recording
-                            ? "bg-primary-background"
-                            : ""
-                        )}
-                        size="sm"
-                        variant="shadow"
+            {isPlaying && (
+              <div className="absolute bottom-6 min-w-full w-full px-6">
+                <div className="flex w-full items-center">
+                  <InteractiveAvatarTextInput
+                    disabled={!stream}
+                    endContent={
+                      <Tooltip
+                        content={!isRecording ? "Start recording" : "Stop recording"}
                       >
-                        {!recording ? (
-                          <Microphone size={20} />
-                        ) : (
-                          <>
-                            <div className="absolute h-full w-full bg-primary-background animate-pulse -z-10"></div>
-                            <MicrophoneStage size={20} />
-                          </>
-                        )}
-                      </Button>
-                    </Tooltip>
-                  }
-                  disabled={!stream}
-                />
+                        <Button
+                          isIconOnly
+                          className={clsx(
+                            "text-white",
+                            !isRecording ? "bg-primary" : "",
+                          )}
+                          isDisabled={!stream}
+                          size="lg"
+                          variant="shadow"
+                          onClick={!isRecording ? startRecording : stopRecording}
+                        >
+                          {!isRecording ? (
+                            <Microphone size={20} />
+                          ) : (
+                            <>
+                              <div className="absolute h-full w-full bg-primary animate-pulse -z-10" />
+                              <MicrophoneStage size={20} />
+                            </>
+                          )}
+                        </Button>
+                      </Tooltip>
+                    }
+                    input={input}
+                    loading={isLoadingChat}
+                    placeholder="Type your message or press the mic to talk"
+                    setInput={setInput}
+                    onSubmit={() => {
+                      setIsLoadingChat(true);
+                      if (!input) {
+                        setDebug("Please enter text to chat with me");
+                        return;
+                      }
+                      handleSubmit();
+                    }}
+                  />
+                </div>
               </div>
-            }
+            )}
           </div>
         ) : (
           <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
             <img
+              alt="Giuseppe avatar"
               className="w-full h-full object-cover"
               draggable="false"
               src={previewImage}
-              alt="Giuseppe avatar">
-            </img>
+            />
             {isLoadingSession ? (
               <div className="flex justify-center items-center absolute">
-                <Spinner size="lg" color="danger" />
+                <Spinner color="primary" size="lg" />
               </div>
-            ) :
-              (
-                <div className="flex flex-col gap-2 absolute bottom-8">
-                  <Button
-                    size="md"
-                    onClick={startSession}
-                    className="bg-primary-background w-full text-white"
-                    variant="shadow"
-                  >
-                    Start session
-                  </Button>
-                </div>
-              )}
+            ) : (
+              <div className="flex flex-col gap-2 absolute bottom-8">
+                <Button
+                  className="w-full text-white"
+                  color="primary"
+                  radius="full"
+                  size="lg"
+                  variant="solid"
+                  onClick={startSession}
+                >
+                  Chat with AI Giuseppe
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
       <div className="justify-center items-center flex overflow-hidden w-full max-w-full">
         <article className="text-wrap text-left w-full">
-          <h3>Transcript</h3>
-          <p className="max-w-fit font-sans">{}</p>
+          <p className="max-w-fit font-sans">{help}</p>
         </article>
       </div>
     </div>
