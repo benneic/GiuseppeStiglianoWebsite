@@ -7,7 +7,7 @@ export const WELCOME = [
   "Hi, I am the digital twin of Giuseppe.",
   "I am trained on his knowledge to assist you with marketing & communications queries.",
   "Or explain the services the real Giuseppe can offer your business.",
-  "Perhaps we could start with your name?"
+  "Perhaps we could start with your name?",
 ];
 
 export const PROMPT = `

@@ -3,34 +3,19 @@ import {
   NewSessionData,
   StreamingAvatarApi,
 } from "@heygen/streaming-avatar";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  Divider,
-  Input,
-  Select,
-  SelectItem,
-  Spinner,
-  Tooltip,
-} from "@nextui-org/react";
-import {
-  BracketsAngle,
-  Microphone,
-  MicrophoneStage,
-} from "@phosphor-icons/react";
-import { ArrowUp, Close } from "@icon-park/react";
+import { Button, Spinner } from "@nextui-org/react";
+import { Close } from "@icon-park/react";
 import { useChat } from "ai/react";
-import clsx from "clsx";
 import OpenAI from "openai";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
+import AvatarAudioRecordButton from "./AvatarAudioRecordButton";
 
 import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
 import { splitString } from "@/app/lib/helpers";
-import Link from "next/link";
+import AvatarTextInput from "./AvatarTextInput";
 
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -44,7 +29,7 @@ export default function InteractiveAvatar() {
   const [isRecording, setIsRecording] = useState(false); // Track recording state
   const [isRecordingWaiting, setIsRecordingWaiting] = useState(false); // Track if we are waiting for avatar to stop speking before recording
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [stream, setStream] = useState<MediaStream>();
+  const [avatarStream, setAvatarStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [help, setHelp] = useState<string>();
   const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
@@ -82,7 +67,7 @@ export default function InteractiveAvatar() {
           .catch((e) => {
             setDebug(e.message);
           });
-      };
+      }
 
       setIsLoadingChat(false);
       console.log("Messages", messages);
@@ -102,7 +87,9 @@ export default function InteractiveAvatar() {
         method: "POST",
       });
       const token = await response.text();
+
       console.log("Access Token:", token); // Log the token to verify
+
       return token;
     } catch (error) {
       console.error("Error fetching access token:", error);
@@ -116,6 +103,7 @@ export default function InteractiveAvatar() {
     await updateToken();
     if (!avatarRef.current) {
       setDebug("Avatar API is not initialized");
+
       return;
     }
     try {
@@ -133,7 +121,7 @@ export default function InteractiveAvatar() {
       );
 
       setAvatarSessionData(res);
-      setStream(avatarRef.current.mediaStream);
+      setAvatarStream(avatarRef.current.mediaStream);
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(
@@ -146,6 +134,7 @@ export default function InteractiveAvatar() {
   async function speakWelcomeMessage() {
     if (!initialized || !avatarRef.current) {
       console.error("Avatar not ready yet");
+
       return;
     }
 
@@ -190,7 +179,10 @@ export default function InteractiveAvatar() {
     };
 
     console.log("Adding event handlers:", avatarRef.current);
-    avatarRef.current.addEventHandler("avatar_start_talking", startTalkCallback);
+    avatarRef.current.addEventHandler(
+      "avatar_start_talking",
+      startTalkCallback,
+    );
     avatarRef.current.addEventHandler("avatar_stop_talking", stopTalkCallback);
 
     setInitialized(true);
@@ -199,6 +191,7 @@ export default function InteractiveAvatar() {
   async function handleInterrupt() {
     if (!initialized || !avatarRef.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
     await avatarRef.current
@@ -231,12 +224,13 @@ export default function InteractiveAvatar() {
       { stopSessionRequest: { sessionId: avatarSessionData?.sessionId } },
       setDebug,
     );
-    setStream(undefined);
+    setAvatarStream(undefined);
   }
 
   useEffect(() => {
     async function init() {
       const newToken = await fetchAccessToken();
+
       console.log("Initializing with Access Token:", newToken); // Log token for debugging
       avatarRef.current = new StreamingAvatarApi(
         new Configuration({ accessToken: newToken, jitterBuffer: 200 }),
@@ -253,14 +247,14 @@ export default function InteractiveAvatar() {
   // close all audio recorder tracks
   useEffect(() => {
     return () => {
-      stream?.getTracks().forEach((track) => track.stop());
+      audioStream?.getTracks().forEach((track) => track.stop());
     };
-  }, [stream]);
+  }, [audioStream]);
 
   useEffect(() => {
-    if (stream && avatarStreamRef.current) {
+    if (avatarStream && avatarStreamRef.current) {
       try {
-        avatarStreamRef.current.srcObject = stream;
+        avatarStreamRef.current.srcObject = avatarStream;
         avatarStreamRef.current.onloadedmetadata = () => {
           avatarStreamRef.current!.play();
           setIsPlaying(true);
@@ -275,7 +269,7 @@ export default function InteractiveAvatar() {
         );
       }
     }
-  }, [avatarStreamRef, stream]);
+  }, [avatarStreamRef, avatarStream]);
 
   useEffect(() => {
     // hacky work around, SDK needs events for connection state
@@ -364,6 +358,7 @@ export default function InteractiveAvatar() {
         file: audioFile,
       });
       const transcription = response.text;
+
       console.log("Transcription: ", transcription);
 
       // set the translation into the input field
@@ -376,7 +371,7 @@ export default function InteractiveAvatar() {
   return (
     <div className="w-full flex flex-col gap-4">
       <div className="flex flex-col justify-center items-center">
-        {stream ? (
+        {avatarStream ? (
           <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
             <video
               ref={avatarStreamRef}
@@ -404,54 +399,31 @@ export default function InteractiveAvatar() {
             {isPlaying && (
               <div className="absolute bottom-6 min-w-full w-full px-6">
                 <div className="flex w-full items-center">
-                  <InteractiveAvatarTextInput
-                    disabled={!stream}
-                    endContent={
-                      <Tooltip
-                        color="foreground"
-                        content={
-                          !isRecording ? "Chat with voice" : "Stop recording"
+                  <div className="flex flex-row justify-center h-full w-full gap-2">
+                    <AvatarAudioRecordButton
+                      isDisabled={!avatarStream}
+                      isRecording={isRecording}
+                      startRecording={startRecording}
+                      stopRecording={stopRecording}
+                    />
+                    <AvatarTextInput
+                      input={input}
+                      isDisabled={!avatarStream}
+                      isLoading={isLoadingChat}
+                      isRecording={isRecording}
+                      placeholder="Type or press the mic to talk"
+                      setInput={setInput}
+                      onSubmit={() => {
+                        setIsLoadingChat(true);
+                        if (!input) {
+                          setDebug("Please enter text to chat with me");
+
+                          return;
                         }
-                        showArrow={true}
-                      >
-                        <Button
-                          isIconOnly
-                          className={clsx(
-                            "text-white",
-                            !isRecording ? "bg-primary" : "",
-                          )}
-                          isDisabled={!stream}
-                          size="lg"
-                          variant="solid"
-                          onClick={
-                            !isRecording ? startRecording : stopRecording
-                          }
-                        >
-                          {!isRecording ? (
-                            <Microphone size={20} />
-                          ) : (
-                            <>
-                              <div className="absolute h-full w-full bg-primary animate-pulse -z-10" />
-                              <ArrowUp theme="outline" size="20" />
-                            </>
-                          )}
-                        </Button>
-                      </Tooltip>
-                    }
-                    input={input}
-                    loading={isLoadingChat}
-                    placeholder="Type your message or press the mic to talk"
-                    recording={isRecording}
-                    setInput={setInput}
-                    onSubmit={() => {
-                      setIsLoadingChat(true);
-                      if (!input) {
-                        setDebug("Please enter text to chat with me");
-                        return;
-                      }
-                      handleSubmit();
-                    }}
-                  />
+                        handleSubmit();
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
