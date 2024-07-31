@@ -30,6 +30,7 @@ import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
 import { AVATAR_ID, VOICE_ID, PROMPT, WELCOME } from "@/app/lib/constants";
 import { splitString } from "@/app/lib/helpers";
+import Link from "next/link";
 
 const openai = new OpenAI({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
@@ -156,14 +157,15 @@ export default function InteractiveAvatar() {
 
       return;
     }
-
-    await avatarRef.current
-      .speak({
-        taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId },
-      })
-      .catch((e) => {
-        setDebug(e.message);
-      });
+    for (const text of WELCOME) {
+      await avatarRef.current
+        .speak({
+          taskRequest: { text: text, sessionId: avatarSessionData?.sessionId },
+        })
+        .catch((e) => {
+          setDebug(e.message);
+        });
+    }
   }
 
   async function updateToken() {
@@ -467,7 +469,7 @@ export default function InteractiveAvatar() {
                 <Spinner color="primary" size="lg" />
               </div>
             ) : (
-              <div className="flex flex-col gap-2 absolute bottom-8">
+              <div className="flex flex-col gap-2 absolute bottom-8 sm:bottom-16">
                 <Button
                   className="w-full text-white"
                   color="primary"
@@ -484,16 +486,33 @@ export default function InteractiveAvatar() {
         )}
       </div>
       <div className="flex flex-col justify-center items-center">
-        <article className="text-wrap text-left w-full">
+        <article className="text-wrap text-center w-[380px] text-black/50 text-xs">
+          <p>
+            AI Giuseppe can hallucinate and make mistakes.
+            <br />
+            Consider checking important information with the{" "}
+            <Link
+              className="underline"
+              href="https://giuseppestigliano.com/#contact"
+            >
+              real Giuseppe
+            </Link>
+            .
+          </p>
           <p className="max-w-fit font-sans">{help}</p>
-          {audioUrl && (
-            <audio controls>
-              <source src={audioUrl} />
-              <track kind="captions">{input}</track>
-            </audio>
-          )}
         </article>
       </div>
     </div>
   );
 }
+
+/***
+ * Test out audio recordings for Safari with this
+ *          {audioUrl && (
+            <audio controls>
+              <source src={audioUrl} />
+              <track kind="captions" />
+            </audio>
+          )}
+ * 
+ */
