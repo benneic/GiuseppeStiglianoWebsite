@@ -483,10 +483,15 @@ export default function InteractiveAvatar() {
           </div>
         )}
       </div>
-      <div className="justify-center items-center flex overflow-hidden w-full max-w-full">
+      <div className="flex flex-col justify-center items-center">
         <article className="text-wrap text-left w-full">
           <p className="max-w-fit font-sans">{help}</p>
-          {audioUrl && <audio controls src={audioUrl} />}
+          {audioUrl && (
+            <audio controls>
+              <source src={audioUrl} />
+              <track kind="captions">{input}</track>
+            </audio>
+          )}
         </article>
       </div>
     </div>
