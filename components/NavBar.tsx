@@ -94,7 +94,7 @@ export default function NavBar() {
             Home
           </Link>
         </NavbarMenuItem>
-        <NavbarMenuItem className="pt-10">
+        <NavbarMenuItem>
           <Link
             className="w-full text-black text-4xl underline"
             href="https://giuseppestigliano.com/#experience"
