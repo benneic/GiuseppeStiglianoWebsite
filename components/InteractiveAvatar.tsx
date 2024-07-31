@@ -28,7 +28,8 @@ export default function InteractiveAvatar() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false); // Track recording state
   const [isRecordingWaiting, setIsRecordingWaiting] = useState(false); // Track if we are waiting for avatar to stop speking before recording
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(true);
+  const [isTranscriptionWaiting, setIsTranscriptionWaiting] = useState(true);
   const [avatarStream, setAvatarStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [help, setHelp] = useState<string>();
@@ -53,7 +54,7 @@ export default function InteractiveAvatar() {
         return;
       }
 
-      let dialogue = splitString(message.content, 1000);
+      let dialogue = splitString(message.content, 980);
 
       for (const text of dialogue) {
         //send the ChatGPT response to the Interactive Avatar
@@ -70,7 +71,6 @@ export default function InteractiveAvatar() {
       }
 
       setIsLoadingChat(false);
-      console.log("Messages", messages);
     },
     initialMessages: [
       {
@@ -146,15 +146,14 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    for (const text of WELCOME) {
-      await avatarRef.current
-        .speak({
-          taskRequest: { text: text, sessionId: avatarSessionData?.sessionId },
-        })
-        .catch((e) => {
-          setDebug(e.message);
-        });
-    }
+
+    await avatarRef.current
+      .speak({
+        taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId },
+      })
+      .catch((e) => {
+        setDebug(e.message);
+      });
   }
 
   async function updateToken() {
@@ -281,16 +280,29 @@ export default function InteractiveAvatar() {
   // if we were waiting to record while avatar was speaking
   // check if it is time to record
   useEffect(() => {
-    if (!isSpeaking && isRecordingWaiting) {
+    if (isPlaying && isSpeaking && isRecordingWaiting) {
+      handleInterrupt();
+    } else if (!isSpeaking && isRecordingWaiting) {
       setIsRecordingWaiting(false);
       startRecording();
     }
-  }, [isSpeaking]);
+  }, [isSpeaking, isRecordingWaiting]);
+
+  useEffect(() => {
+    if (!isTranscriptionWaiting) {
+      return;
+    }
+    // send the input immediately
+    if (input.trim() !== "") {
+      setIsLoadingChat(true);
+      handleSubmit();
+      setIsTranscriptionWaiting(false);
+    }
+  }, [input, isTranscriptionWaiting]);
 
   function startRecording() {
     if (isSpeaking) {
       setIsRecordingWaiting(true);
-      handleInterrupt();
 
       return;
     }
@@ -312,13 +324,14 @@ export default function InteractiveAvatar() {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/wav",
           });
+
+          audioChunksRef.current = [];
+
           const audioUrl = URL.createObjectURL(audioBlob);
 
           setAudioUrl(audioUrl);
 
           transcribeAudio(audioBlob);
-
-          audioChunksRef.current = [];
         };
         /**
         We can provide the timeslice param to start() method to specify number of milliseconds to record into each Blob.
@@ -359,10 +372,10 @@ export default function InteractiveAvatar() {
       });
       const transcription = response.text;
 
-      console.log("Transcription: ", transcription);
-
       // set the translation into the input field
       setInput(transcription);
+
+      setIsTranscriptionWaiting(true);
     } catch (error) {
       console.error("Error transcribing audio:", error);
     }
@@ -401,7 +414,12 @@ export default function InteractiveAvatar() {
                 <div className="flex w-full items-center">
                   <div className="flex flex-row justify-center h-full w-full gap-2">
                     <AvatarAudioRecordButton
-                      isDisabled={!avatarStream}
+                      isDisabled={
+                        !initialized ||
+                        !avatarRef.current ||
+                        !avatarStream ||
+                        !avatarStreamRef.current
+                      }
                       isRecording={isRecording}
                       startRecording={startRecording}
                       stopRecording={stopRecording}
@@ -414,12 +432,13 @@ export default function InteractiveAvatar() {
                       placeholder="Type or press the mic to talk"
                       setInput={setInput}
                       onSubmit={() => {
-                        setIsLoadingChat(true);
                         if (!input) {
                           setDebug("Please enter text to chat with me");
+                          setHelp("Please enter text to chat with me");
 
                           return;
                         }
+                        setIsLoadingChat(true);
                         handleSubmit();
                       }}
                     />
