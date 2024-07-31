@@ -48,10 +48,12 @@ export default function InteractiveAvatar() {
   const [help, setHelp] = useState<string>();
   const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
   const [initialized, setInitialized] = useState(false); // Track initialization
-  const mediaStream = useRef<HTMLVideoElement>(null);
-  const avatar = useRef<StreamingAvatarApi | null>(null);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const audioChunks = useRef<Blob[]>([]);
+  const avatarStreamRef = useRef<HTMLVideoElement>(null);
+  const avatarRef = useRef<StreamingAvatarApi | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [audioStream, setAudioStream] = useState<MediaStream>();
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const previewImage = "/giuseppe-landscape.png";
 
@@ -59,7 +61,7 @@ export default function InteractiveAvatar() {
     onFinish: async (message) => {
       console.log("ChatGPT Response:", message);
 
-      if (!initialized || !avatar.current) {
+      if (!initialized || !avatarRef.current) {
         setDebug("Avatar API not initialized");
 
         return;
@@ -69,7 +71,7 @@ export default function InteractiveAvatar() {
 
       for (const text of dialogue) {
         //send the ChatGPT response to the Interactive Avatar
-        await avatar.current
+        await avatarRef.current
           .speak({
             taskRequest: {
               text: text,
@@ -111,13 +113,13 @@ export default function InteractiveAvatar() {
   async function startSession() {
     setIsLoadingSession(true);
     await updateToken();
-    if (!avatar.current) {
+    if (!avatarRef.current) {
       setDebug("Avatar API is not initialized");
       return;
     }
     try {
       console.log("Starting Avatar:", AVATAR_ID);
-      const res = await avatar.current.createStartAvatar(
+      const res = await avatarRef.current.createStartAvatar(
         {
           newSessionRequest: {
             quality: "high",
@@ -130,7 +132,7 @@ export default function InteractiveAvatar() {
       );
 
       setAvatarSessionData(res);
-      setStream(avatar.current.mediaStream);
+      setStream(avatarRef.current.mediaStream);
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(
@@ -141,7 +143,7 @@ export default function InteractiveAvatar() {
   }
 
   async function speakWelcomeMessage() {
-    if (!initialized || !avatar.current) {
+    if (!initialized || !avatarRef.current) {
       console.error("Avatar not ready yet");
       return;
     }
@@ -155,7 +157,7 @@ export default function InteractiveAvatar() {
       return;
     }
 
-    await avatar.current
+    await avatarRef.current
       .speak({
         taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId },
       })
@@ -169,7 +171,7 @@ export default function InteractiveAvatar() {
 
     console.log("Updating Access Token:", newToken); // Log token for debugging
 
-    avatar.current = new StreamingAvatarApi(
+    avatarRef.current = new StreamingAvatarApi(
       new Configuration({ accessToken: newToken }),
     );
 
@@ -185,19 +187,19 @@ export default function InteractiveAvatar() {
       setIsSpeaking(false);
     };
 
-    console.log("Adding event handlers:", avatar.current);
-    avatar.current.addEventHandler("avatar_start_talking", startTalkCallback);
-    avatar.current.addEventHandler("avatar_stop_talking", stopTalkCallback);
+    console.log("Adding event handlers:", avatarRef.current);
+    avatarRef.current.addEventHandler("avatar_start_talking", startTalkCallback);
+    avatarRef.current.addEventHandler("avatar_stop_talking", stopTalkCallback);
 
     setInitialized(true);
   }
 
   async function handleInterrupt() {
-    if (!initialized || !avatar.current) {
+    if (!initialized || !avatarRef.current) {
       setDebug("Avatar API not initialized");
       return;
     }
-    await avatar.current
+    await avatarRef.current
       .interrupt({
         interruptRequest: { sessionId: avatarSessionData?.sessionId },
       })
@@ -211,19 +213,19 @@ export default function InteractiveAvatar() {
 
     if (isRecording) {
       stopRecording();
-      mediaRecorder.current = null;
+      mediaRecorderRef.current = null;
     }
     if (isLoadingChat) {
       setIsLoadingChat(false);
     }
 
     // stop avatar
-    if (!initialized || !avatar.current) {
+    if (!initialized || !avatarRef.current) {
       setDebug("Avatar API not initialized");
 
       return;
     }
-    await avatar.current.stopAvatar(
+    await avatarRef.current.stopAvatar(
       { stopSessionRequest: { sessionId: avatarSessionData?.sessionId } },
       setDebug,
     );
@@ -234,7 +236,7 @@ export default function InteractiveAvatar() {
     async function init() {
       const newToken = await fetchAccessToken();
       console.log("Initializing with Access Token:", newToken); // Log token for debugging
-      avatar.current = new StreamingAvatarApi(
+      avatarRef.current = new StreamingAvatarApi(
         new Configuration({ accessToken: newToken, jitterBuffer: 200 }),
       );
       setInitialized(true); // Set initialized to true
@@ -246,17 +248,32 @@ export default function InteractiveAvatar() {
     };
   }, []);
 
+  // close all audio recorder tracks
   useEffect(() => {
-    if (stream && mediaStream.current) {
-      mediaStream.current.srcObject = stream;
-      mediaStream.current.onloadedmetadata = () => {
-        mediaStream.current!.play();
-        setIsPlaying(true);
-        setDebug("Playing");
-        speakWelcomeMessage();
-      };
+    return () => {
+      stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, [stream]);
+
+  useEffect(() => {
+    if (stream && avatarStreamRef.current) {
+      try {
+        avatarStreamRef.current.srcObject = stream;
+        avatarStreamRef.current.onloadedmetadata = () => {
+          avatarStreamRef.current!.play();
+          setIsPlaying(true);
+          setDebug("Playing");
+          speakWelcomeMessage();
+        };
+      } catch (error) {
+        console.error("Error accessing player:", error);
+
+        setHelp(
+          "Error playing audio, please allow access via your address bar",
+        );
+      }
     }
-  }, [mediaStream, stream]);
+  }, [avatarStreamRef, stream]);
 
   useEffect(() => {
     // hacky work around, SDK needs events for connection state
@@ -285,20 +302,27 @@ export default function InteractiveAvatar() {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
-        mediaRecorder.current = new MediaRecorder(stream);
+        setAudioStream(stream);
+        mediaRecorderRef.current = new MediaRecorder(stream);
 
-        mediaRecorder.current.ondataavailable = (event) => {
+        mediaRecorderRef.current.ondataavailable = (event) => {
           console.log("Recieved audio chunk", event.data);
-          audioChunks.current.push(event.data);
+          audioChunksRef.current.push(event.data);
         };
 
-        mediaRecorder.current.onstop = () => {
-          const audioBlob = new Blob(audioChunks.current, {
+        mediaRecorderRef.current.onstop = () => {
+          console.log("Audio recording stopped");
+
+          const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/wav",
           });
-          console.log("Audio recording stopped");
-          audioChunks.current = [];
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          setAudioUrl(audioUrl);
+
           transcribeAudio(audioBlob);
+
+          audioChunksRef.current = [];
         };
         /**
         We can provide the timeslice param to start() method to specify number of milliseconds to record into each Blob.
@@ -306,7 +330,7 @@ export default function InteractiveAvatar() {
         We could then send each slice to whisper and see what it returns
         https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/start
         **/
-        mediaRecorder.current.start(5000); // Chunk every 5 seconds
+        mediaRecorderRef.current.start(); // Chunk every 5 seconds
         setIsRecording(true);
       })
       .catch((error) => {
@@ -319,16 +343,11 @@ export default function InteractiveAvatar() {
   }
 
   function stopRecording() {
-    if (mediaRecorder.current) {
-      mediaRecorder.current.stop();
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
-
       // stop all voice recording
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((streams) => {
-        streams.getTracks().forEach((track) => {
-          track.stop();
-        });
-      });
+      audioStream?.getTracks().forEach((track) => track.stop());
     }
   }
 
@@ -358,7 +377,7 @@ export default function InteractiveAvatar() {
         {stream ? (
           <div className="justify-center items-center flex rounded-none sm:rounded-lg overflow-hidden relative w-full max-w-full sm:h-auto h-[80vh] sm:aspect-video">
             <video
-              ref={mediaStream}
+              ref={avatarStreamRef}
               autoPlay
               playsInline
               className="w-full h-full object-cover"
@@ -467,6 +486,7 @@ export default function InteractiveAvatar() {
       <div className="justify-center items-center flex overflow-hidden w-full max-w-full">
         <article className="text-wrap text-left w-full">
           <p className="max-w-fit font-sans">{help}</p>
+          {audioUrl && <audio controls src={audioUrl} />}
         </article>
       </div>
     </div>
