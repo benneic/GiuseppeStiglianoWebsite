@@ -1,9 +1,10 @@
 import {
   Configuration,
   NewSessionData,
+  NewSessionRequestVoiceEmotionEnum,
   StreamingAvatarApi,
 } from "@heygen/streaming-avatar";
-import { Button, Spinner } from "@nextui-org/react";
+import { Button, Select, SelectItem, Spinner } from "@nextui-org/react";
 import { Close } from "@icon-park/react";
 import { useChat } from "ai/react";
 import OpenAI from "openai";
@@ -30,17 +31,41 @@ export default function InteractiveAvatar() {
   const [isRecordingWaiting, setIsRecordingWaiting] = useState(false); // Track if we are waiting for avatar to stop speking before recording
   const [isSpeaking, setIsSpeaking] = useState(true);
   const [isTranscriptionWaiting, setIsTranscriptionWaiting] = useState(true);
-  const [avatarStream, setAvatarStream] = useState<MediaStream>();
+
   const [debug, setDebug] = useState<string>();
   const [help, setHelp] = useState<string>();
+
+  const [avatarStream, setAvatarStream] = useState<MediaStream>();
   const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
   const [initialized, setInitialized] = useState(false); // Track initialization
   const avatarStreamRef = useRef<HTMLVideoElement>(null);
   const avatarRef = useRef<StreamingAvatarApi | null>(null);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [audioStream, setAudioStream] = useState<MediaStream>();
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  const [voice, setVoice] = useState<NewSessionRequestVoiceEmotionEnum>("Excited");
+  const [speed, setSpeed] = useState<string>("1.00");
+
+  const voices = [
+    { voice: "Excited" },
+    { voice: "Serious" },
+    { voice: "Friendly" },
+    { voice: "Soothing" },
+    { voice: "Broadcaster" },
+  ];
+
+  const speeds = [
+    { speed: "0.85" },
+    { speed: "0.90" },
+    { speed: "0.95" },
+    { speed: "1.00" },
+    { speed: "1.05" },
+    { speed: "1.10" },
+    { speed: "1.15" },
+  ];
 
   const previewImage = "/giuseppe-landscape.png";
 
@@ -113,7 +138,11 @@ export default function InteractiveAvatar() {
           newSessionRequest: {
             quality: "high",
             avatarName: AVATAR_ID,
-            voice: { voiceId: VOICE_ID, emotion: "Excited", rate: 0.96 },
+            voice: {
+              voiceId: VOICE_ID,
+              emotion: voice,
+              rate: parseFloat(speed),
+            },
             knowledgeBase: PROMPT,
           },
         },
@@ -492,6 +521,34 @@ export default function InteractiveAvatar() {
           </p>
           <p className="max-w-fit font-sans">{help}</p>
         </article>
+      </div>
+      <div className="flex flex-row justify-center items-center gap-4">
+        <Select
+          className="max-w-xs"
+          items={voices}
+          label="Voice emotion"
+          placeholder="Select voice emotion"
+          selectedKeys={new Set([voice])}
+          selectionMode="single"
+          onChange={(e) => {
+            setVoice(e.target.value as NewSessionRequestVoiceEmotionEnum);
+          }}
+        >
+          {(item) => <SelectItem key={item.voice}>{item.voice}</SelectItem>}
+        </Select>
+        <Select
+          className="max-w-xs"
+          items={speeds}
+          label="Voice speed"
+          placeholder="Select voice speed"
+          selectedKeys={new Set([speed.toString()])}
+          selectionMode="single"
+          onChange={(e) => {
+            setSpeed(e.target.value);
+          }}
+        >
+          {(item) => <SelectItem key={item.speed}>{item.speed}</SelectItem>}
+        </Select>
       </div>
     </div>
   );
