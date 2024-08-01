@@ -34,7 +34,7 @@ export default function AvatarAudioRecordButton({
           <Microphone size={20} />
         ) : (
           <>
-            <div className="absolute h-full w-full bg-primary animate-pulse -z-10" />
+            <div className="absolute h-full w-full bg-red-500 animate-pulse -z-10" />
             <ArrowUp size="20" theme="outline" />
           </>
         )}

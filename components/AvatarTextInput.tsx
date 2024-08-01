@@ -33,7 +33,9 @@ export default function AvatarTextInput({
       <input
         className="block w-full h-12 p-3 text-sm text-gray-900 rounded-large"
         disabled={isDisabled}
-        placeholder={placeholder}
+        placeholder={
+          isRecording ? "Listening. Press ↑ to send your message." : placeholder
+        }
         value={value}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           setValue(event.target.value);
