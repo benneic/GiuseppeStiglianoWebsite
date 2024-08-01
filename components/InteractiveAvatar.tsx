@@ -70,6 +70,10 @@ export default function InteractiveAvatar() {
       return;
     }
 
+    if (isSpeaking) {
+      handleInterrupt();
+    }
+
     let dialogue = splitString(chatResponse, 980);
 
     for (const text of dialogue) {
