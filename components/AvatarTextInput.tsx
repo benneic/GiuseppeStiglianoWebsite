@@ -3,8 +3,8 @@ import { Button, Image, Input, Spinner, Tooltip } from "@nextui-org/react";
 
 interface AvatarTextInputProps {
   placeholder: string;
-  input: string;
-  setInput: (value: string) => void;
+  value: string;
+  setValue: (value: string) => void;
   isDisabled?: boolean;
   isLoading?: boolean;
   isRecording?: boolean;
@@ -13,19 +13,19 @@ interface AvatarTextInputProps {
 
 export default function AvatarTextInput({
   placeholder,
-  input,
+  value,
   onSubmit,
-  setInput,
+  setValue,
   isDisabled = false,
   isLoading = false,
   isRecording = false,
 }: AvatarTextInputProps) {
   function handleSubmit() {
-    if (input.trim() === "") {
+    if (value.trim() === "") {
       return;
     }
     onSubmit();
-    setInput("");
+    setValue("");
   }
 
   return (
@@ -34,9 +34,9 @@ export default function AvatarTextInput({
         className="block w-full h-12 p-3 text-sm text-gray-900 rounded-large"
         disabled={isDisabled}
         placeholder={placeholder}
-        value={input}
+        value={value}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-          setInput(event.target.value);
+          setValue(event.target.value);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -49,12 +49,12 @@ export default function AvatarTextInput({
           <Button
             className="h-11"
             color="primary"
+            isDisabled={true}
             isIconOnly={true}
             radius="md"
             size="lg"
             variant="solid"
             onClick={handleSubmit}
-            isDisabled={true}
           >
             <Image
               alt="Sound wave"
@@ -91,3 +91,6 @@ export default function AvatarTextInput({
     </div>
   );
 }
+
+
+// onChange={(event: React.ChangeEvent<HTMLInputElement>) => {setValue(event.target.value);}}

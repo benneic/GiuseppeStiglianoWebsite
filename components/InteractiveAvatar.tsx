@@ -30,6 +30,8 @@ export default function InteractiveAvatar() {
   const [isRecordingWaiting, setIsRecordingWaiting] = useState(false); // Track if we are waiting for avatar to stop speking before recording
   const [isSpeaking, setIsSpeaking] = useState(true);
   const [isTranscriptionWaiting, setIsTranscriptionWaiting] = useState(true);
+  const [chatInput, setChatInput] = useState<string>("");
+  const [chatResponse, setChatResponse] = useState<string>("");
 
   const [debug, setDebug] = useState<string>();
   const [help, setHelp] = useState<string>();
@@ -45,36 +47,53 @@ export default function InteractiveAvatar() {
   const [audioStream, setAudioStream] = useState<MediaStream>();
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-
   const previewImage = "/giuseppe-landscape.png";
 
+  /** When chat input changes, set Chat GPT input */
+  useEffect(() => {
+    if (chatInput && chatInput.trim() !== "" && chatInput != input) {
+      setInput(chatInput);
+    }
+  }, [chatInput]);
+
+  /** when the chat response changes, send it to the Avatar */
+  useEffect(() => {
+    if (!initialized || !avatarRef.current) {
+      setDebug("Avatar API not initialized");
+
+      return;
+    }
+
+    if (!chatResponse) {
+      console.error("Empty chat response");
+
+      return;
+    }
+
+    let dialogue = splitString(chatResponse, 980);
+
+    for (const text of dialogue) {
+      //send the ChatGPT response to the Interactive Avatar
+      avatarRef.current
+        .speak({
+          taskRequest: {
+            text: text,
+            sessionId: avatarSessionData?.sessionId,
+          },
+        })
+        .catch((e) => {
+          setDebug(e.message);
+        });
+    }
+  }, [chatResponse]);
+
+  /** Generate chat response from ChatGPT from chat input */
   const { messages, input, setInput, handleSubmit } = useChat({
     onFinish: async (message) => {
       console.log("ChatGPT Response:", message);
-
-      if (!initialized || !avatarRef.current) {
-        setDebug("Avatar API not initialized");
-
-        return;
-      }
-
-      let dialogue = splitString(message.content, 980);
-
-      for (const text of dialogue) {
-        //send the ChatGPT response to the Interactive Avatar
-        await avatarRef.current
-          .speak({
-            taskRequest: {
-              text: text,
-              sessionId: avatarSessionData?.sessionId,
-            },
-          })
-          .catch((e) => {
-            setDebug(e.message);
-          });
-      }
-
+      setChatResponse(message.content);
       setIsLoadingChat(false);
+      setChatInput("");
     },
     initialMessages: [
       {
@@ -296,6 +315,7 @@ export default function InteractiveAvatar() {
     }
   }, [isSpeaking, isRecordingWaiting]);
 
+  /** Send the input to Chat GPT as soon as transcription is set in chat input */
   useEffect(() => {
     if (!isTranscriptionWaiting) {
       return;
@@ -304,10 +324,11 @@ export default function InteractiveAvatar() {
     if (input.trim() !== "") {
       setIsLoadingChat(true);
       handleSubmit();
-      setIsTranscriptionWaiting(false);
     }
-  }, [input, isTranscriptionWaiting]);
+    setIsTranscriptionWaiting(false);
+  }, [input]);
 
+  /** record audio from the browser and set the result to the chat input */
   function startRecording() {
     if (isSpeaking) {
       setIsRecordingWaiting(true);
@@ -339,6 +360,8 @@ export default function InteractiveAvatar() {
 
           setAudioUrl(audioUrl);
 
+          setIsTranscriptionWaiting(true);
+
           transcribeAudio(audioBlob);
         };
         /**
@@ -359,15 +382,6 @@ export default function InteractiveAvatar() {
       });
   }
 
-  function stopRecording() {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      // stop all voice recording
-      audioStream?.getTracks().forEach((track) => track.stop());
-    }
-  }
-
   async function transcribeAudio(audioBlob: Blob) {
     try {
       // Convert Blob to File
@@ -381,11 +395,18 @@ export default function InteractiveAvatar() {
       const transcription = response.text;
 
       // set the translation into the input field
-      setInput(transcription);
-
-      setIsTranscriptionWaiting(true);
+      setChatInput(transcription);
     } catch (error) {
       console.error("Error transcribing audio:", error);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      // stop all voice recording
+      audioStream?.getTracks().forEach((track) => track.stop());
     }
   }
 
@@ -433,12 +454,12 @@ export default function InteractiveAvatar() {
                       stopRecording={stopRecording}
                     />
                     <AvatarTextInput
-                      input={input}
                       isDisabled={!avatarStream}
                       isLoading={isLoadingChat}
                       isRecording={isRecording}
                       placeholder="Type or press the mic to talk"
-                      setInput={setInput}
+                      setValue={setChatInput}
+                      value={chatInput}
                       onSubmit={() => {
                         if (!input) {
                           setDebug("Please enter text to chat with me");
