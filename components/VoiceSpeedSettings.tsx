@@ -1,8 +1,14 @@
 import { NewSessionRequestVoiceEmotionEnum } from "@heygen/streaming-avatar";
-import { Select } from "@nextui-org/react";
+import { Select, SelectItem } from "@nextui-org/react";
 import { useState } from "react";
 
-export default function AvatarTextInput() {
+interface VoiceSpeedSettingsProps {
+  isDisabled?: boolean;
+}
+
+export default function VoiceSpeedSettings({
+  isDisabled = false,
+}: VoiceSpeedSettingsProps) {
   const [voice, setVoice] = useState<NewSessionRequestVoiceEmotionEnum>("Excited");
   const [speed, setSpeed] = useState<string>("1.00");
 
@@ -28,7 +34,7 @@ export default function AvatarTextInput() {
     <div className="flex flex-row justify-center items-center gap-4 p-4">
       <Select
         className="max-w-xs"
-        isDisabled={!!avatarStream}
+        isDisabled={isDisabled}
         items={voices}
         label="Voice emotion"
         placeholder="Select voice emotion"
@@ -42,7 +48,7 @@ export default function AvatarTextInput() {
       </Select>
       <Select
         className="max-w-xs"
-        isDisabled={!!avatarStream}
+        isDisabled={isDisabled}
         items={speeds}
         label="Voice speed"
         placeholder="Select voice speed"
