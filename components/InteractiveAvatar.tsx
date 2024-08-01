@@ -522,9 +522,10 @@ export default function InteractiveAvatar() {
           <p className="max-w-fit font-sans">{help}</p>
         </article>
       </div>
-      <div className="flex flex-row justify-center items-center gap-4">
+      <div className="flex flex-row justify-center items-center gap-4 p-4">
         <Select
           className="max-w-xs"
+          isDisabled={!!avatarStream}
           items={voices}
           label="Voice emotion"
           placeholder="Select voice emotion"
@@ -538,6 +539,7 @@ export default function InteractiveAvatar() {
         </Select>
         <Select
           className="max-w-xs"
+          isDisabled={!!avatarStream}
           items={speeds}
           label="Voice speed"
           placeholder="Select voice speed"
