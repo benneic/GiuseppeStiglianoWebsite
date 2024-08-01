@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: `%s - Giuseppe Stigliano AI Avatar`,
   },
   icons: {
-    icon: "/GS_favicon.ico",
+    icon: "/GS_favicon.png",
   },
 };
 

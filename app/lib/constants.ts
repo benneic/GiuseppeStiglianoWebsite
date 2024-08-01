@@ -3,12 +3,8 @@ export const AVATAR_ID = "2ede931b120d4af89c93e14dee9e7e3b"; // NEW 2024-07-29
 
 export const VOICE_ID = "a3ff88c468d841aca47d6b683ccb9171";
 
-export const WELCOME = `
-  Hi, I am the digital twin of Giuseppe.
-  I am trained on his knowledge to assist you with marketing & communications queries.
-  Or explain the services the real Giuseppe can offer your business.
-  Perhaps we could start with your name?
-`;
+export const WELCOME =
+  "Hi, I am the digital twin of Giuseppe. I'm trained on his knowledge. Do you want to hear about his books or conferences?";
 
 export const PROMPT = `
 PERSONA:

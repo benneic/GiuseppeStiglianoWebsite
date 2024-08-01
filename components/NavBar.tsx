@@ -28,7 +28,9 @@ export default function NavBar() {
     >
       <NavbarContent className="pr-3" justify="start">
         <NavbarBrand>
-          <p className="py-2 text-sm text-white">AI Giuseppe</p>
+          <button className="py-3 text-[16px] text-white" type="button">
+            AI Giuseppe
+          </button>
         </NavbarBrand>
       </NavbarContent>
 
@@ -36,7 +38,7 @@ export default function NavBar() {
         <NavbarItem className="isolate inline-flex rounded-full shadow-sm">
           <Link color="foreground" href="https://giuseppestigliano.com">
             <button
-              className="relative inline-flex items-center rounded-l-full bg-white pl-5 pr-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
+              className="relative h-[40] inline-flex items-center rounded-l-full bg-white pl-6 pr-3 py-3 text-[16px] text-gray-900 hover:bg-gray-50 focus:z-10"
               type="button"
             >
               Home
@@ -47,7 +49,7 @@ export default function NavBar() {
             href="https://giuseppestigliano.com/#experience"
           >
             <button
-              className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
+              className="relative h-[40] -ml-px inline-flex items-center bg-white px-3 py-3 text-[16px] text-gray-900 hover:bg-gray-50 focus:z-10"
               type="button"
             >
               Experience
@@ -58,7 +60,7 @@ export default function NavBar() {
             href="https://giuseppestigliano.com/#newsletter"
           >
             <button
-              className="relative -ml-px inline-flex items-center bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
+              className="relative h-[40] -ml-px inline-flex items-center bg-white px-3 py-3 text-[16px] text-gray-900 hover:bg-gray-50 focus:z-10"
               type="button"
             >
               Newsletter
@@ -69,7 +71,7 @@ export default function NavBar() {
             href="https://giuseppestigliano.com/#contact"
           >
             <button
-              className="relative -ml-px inline-flex items-center rounded-r-full bg-white pl-3 pr-5 py-2 text-sm text-gray-900 hover:bg-gray-50 focus:z-10"
+              className="relative h-[40] -ml-px inline-flex items-center rounded-r-full bg-white pl-3 pr-6 py-3 text-[16px] text-gray-900 hover:bg-gray-50 focus:z-10"
               type="button"
             >
               Contact
