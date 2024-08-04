@@ -26,8 +26,8 @@ module.exports = {
             primary: {
               //... 50 to 900
               foreground: "#FFFFFF",
-              background: "#006FEE",
-              DEFAULT: "#006FEE",
+              background: "#a22115",
+              DEFAULT: "#a22115",
             }
           }
         },
