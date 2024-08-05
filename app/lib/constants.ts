@@ -4,7 +4,7 @@ export const AVATAR_ID = "2ede931b120d4af89c93e14dee9e7e3b"; // NEW 2024-07-29
 export const VOICE_ID = "a3ff88c468d841aca47d6b683ccb9171";
 
 export const WELCOME =
-  "Hi, I am the digital twin of Giuseppe. I'm trained on his knowledge. If you are interested in marketing, innovation and retail I'm here to answer your questions.";
+  "Hi, I am AI Giuseppe, I’m here to answer any business or marketing question you might have. What can I help you with?";
 
 export const PROMPT = `
 PERSONA:

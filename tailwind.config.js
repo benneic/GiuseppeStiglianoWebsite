@@ -26,8 +26,9 @@ module.exports = {
             primary: {
               //... 50 to 900
               foreground: "#FFFFFF",
-              background: "#a22115",
-              DEFAULT: "#a22115",
+              background: "#B10100", // other red a22115
+              hover: "#D92121",
+              DEFAULT: "#B10100",
             }
           }
         },

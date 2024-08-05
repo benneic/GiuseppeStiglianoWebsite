@@ -495,7 +495,7 @@ export default function InteractiveAvatar() {
             ) : (
               <div className="flex flex-col gap-2 absolute bottom-8 sm:bottom-16">
                 <Button
-                  className="w-full text-white"
+                  className="w-full text-white hover:bg-primary-hover/100"
                   color="primary"
                   radius="full"
                   size="lg"
@@ -511,15 +511,35 @@ export default function InteractiveAvatar() {
       </div>
       <div className="flex flex-col justify-center items-center">
         <article className="text-wrap text-center w-[380px] text-black/50 text-xs">
+          <p className="pb-4">
+            AI Giuseppe is powered by cutting-edge technology that’s constantly
+            evolving to bring you the most advanced experience.
+          </p>
+          <p className="pb-4">
+            As with all innovations, there might be occasional hiccups along the
+            way. AI Giuseppe may hallucinate.
+          </p>
           <p>
-            AI Giuseppe can hallucinate and make mistakes.
+            For critical information, it’s always best to verify with
             <br />
-            Consider checking important information with the{" "}
+            the{" "}
             <Link
               className="underline"
               href="https://giuseppestigliano.com/#contact"
             >
-              real Giuseppe
+              real Giuseppe here
+            </Link>
+            .
+          </p>
+          <p className="max-w-fit font-sans">{help}</p>
+        </article>
+      </div>
+      <div className="flex flex-col justify-center items-center">
+        <article className="text-wrap text-center w-[380px] text-black/50 text-xs">
+          <p>
+            Made by{" "}
+            <Link className="underline" href="https://unevenfutures.com">
+              UnevenFutures.com
             </Link>
             .
           </p>
