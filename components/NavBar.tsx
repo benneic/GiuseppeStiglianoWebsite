@@ -57,6 +57,17 @@ export default function NavBar() {
           </Link>
           <Link
             color="foreground"
+            href="https://giuseppestigliano.com/#ai"
+          >
+            <button
+              className="relative h-[40] -ml-px inline-flex items-center bg-white px-3 py-3 text-[16px] text-gray-900 hover:bg-gray-50 focus:z-10"
+              type="button"
+            >
+              AI
+            </button>
+          </Link>
+          <Link
+            color="foreground"
             href="https://giuseppestigliano.com/#newsletter"
           >
             <button
@@ -103,6 +114,15 @@ export default function NavBar() {
             size="lg"
           >
             Experience
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Link
+            className="w-full text-black text-4xl underline"
+            href="https://giuseppestigliano.com/#ai"
+            size="lg"
+          >
+            AI
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
