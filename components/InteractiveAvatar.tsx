@@ -162,6 +162,7 @@ export default function InteractiveAvatar() {
     setIsLoadingSession(false);
   }
 
+/*
   async function speakWelcomeMessage() {
     if (!initialized || !avatarRef.current) {
       console.error("Avatar not ready yet");
@@ -186,6 +187,7 @@ export default function InteractiveAvatar() {
         setDebug(e.message);
       });
   }
+  */
 
   async function updateToken() {
     const newToken = await fetchAccessToken();
@@ -289,7 +291,6 @@ export default function InteractiveAvatar() {
           avatarStreamRef.current!.play();
           setIsPlaying(true);
           setDebug("Playing");
-          speakWelcomeMessage();
         };
       } catch (error) {
         console.error("Error accessing player:", error);
