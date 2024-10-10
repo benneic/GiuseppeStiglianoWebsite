@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",
-    "@heygen/streaming-avatar": "^1.0.11",
+    "@heygen/streaming-avatar": "^2.0.6",
     "@icon-park/react": "^1.4.2",
     "@nextui-org/button": "2.0.34",
     "@nextui-org/code": "2.0.29",
@@ -34,7 +34,7 @@
     "clsx": "2.1.1",
     "framer-motion": "~11.1.1",
     "intl-messageformat": "^10.5.0",
-    "next": "^14.2.5",
+    "next": "^14.2.15",
     "next-themes": "^0.2.1",
     "openai": "^4.52.1",
     "react": "18.3.1",

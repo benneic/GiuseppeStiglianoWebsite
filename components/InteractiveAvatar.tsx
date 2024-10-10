@@ -1,8 +1,6 @@
-import {
-  Configuration,
-  NewSessionData,
-  NewSessionRequestVoiceEmotionEnum,
-  StreamingAvatarApi,
+import StreamingAvatar, {
+  AvatarQuality,
+  StreamingEvents, TaskType, VoiceEmotion,
 } from "@heygen/streaming-avatar";
 import { Button, Select, SelectItem, Spinner } from "@nextui-org/react";
 import { Close } from "@icon-park/react";
@@ -32,15 +30,16 @@ export default function InteractiveAvatar() {
   const [isTranscriptionWaiting, setIsTranscriptionWaiting] = useState(true);
   const [chatInput, setChatInput] = useState<string>("");
   const [chatResponse, setChatResponse] = useState<string>("");
+  const [isUserTalking, setIsUserTalking] = useState(false);
 
   const [debug, setDebug] = useState<string>();
   const [help, setHelp] = useState<string>();
 
-  const [avatarStream, setAvatarStream] = useState<MediaStream>();
-  const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
+  const [avatarStream, setAvatarStream] = useState<MediaStream | null>();
+  //const [avatarSessionData, setAvatarSessionData] = useState<NewSessionData>();
   const [initialized, setInitialized] = useState(false); // Track initialization
   const avatarStreamRef = useRef<HTMLVideoElement>(null);
-  const avatarRef = useRef<StreamingAvatarApi | null>(null);
+  const avatarRef = useRef<StreamingAvatar | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -80,10 +79,8 @@ export default function InteractiveAvatar() {
       //send the ChatGPT response to the Interactive Avatar
       avatarRef.current
         .speak({
-          taskRequest: {
-            text: text,
-            sessionId: avatarSessionData?.sessionId,
-          },
+          text: text,
+          task_type: TaskType.TALK,
         })
         .catch((e) => {
           setDebug(e.message);
@@ -108,6 +105,12 @@ export default function InteractiveAvatar() {
     ],
   });
 
+  function handleChat() {
+    setChatResponse(chatInput);
+    setIsLoadingChat(false);
+    setChatInput("");
+  }
+
   async function fetchAccessToken() {
     try {
       const response = await fetch("/api/get-access-token", {
@@ -127,39 +130,58 @@ export default function InteractiveAvatar() {
 
   async function startSession() {
     setIsLoadingSession(true);
-    await updateToken();
-    if (!avatarRef.current) {
-      setDebug("Avatar API is not initialized");
+    const newToken = await fetchAccessToken();
 
-      return;
-    }
+    avatarRef.current = new StreamingAvatar({
+      token: newToken,
+    });
+
+    avatarRef.current.on(StreamingEvents.AVATAR_START_TALKING, (e) => {
+      console.log("Avatar started talking", e);
+      setIsSpeaking(true);
+    });
+
+    avatarRef.current.on(StreamingEvents.AVATAR_STOP_TALKING, (e) => {
+      console.log("Avatar stopped talking", e);
+      setIsSpeaking(false);
+    });
+
+    avatarRef.current.on(StreamingEvents.STREAM_DISCONNECTED, () => {
+      console.log("Stream disconnected");
+      endSession();
+    });
+    avatarRef.current?.on(StreamingEvents.STREAM_READY, (event) => {
+      console.log(">>>>> Stream ready:", event.detail);
+      setAvatarStream(event.detail);
+      setIsLoadingSession(false);
+    });
+    avatarRef.current?.on(StreamingEvents.USER_START, (event) => {
+      console.log(">>>>> User started talking:", event);
+      setIsUserTalking(true);
+    });
+    avatarRef.current?.on(StreamingEvents.USER_STOP, (event) => {
+      console.log(">>>>> User stopped talking:", event);
+      setIsUserTalking(false);
+    });
+
     try {
       console.log("Starting Avatar:", AVATAR_ID);
-      const res = await avatarRef.current.createStartAvatar(
-        {
-          newSessionRequest: {
-            quality: "high",
-            avatarName: AVATAR_ID,
-            voice: {
-              voiceId: VOICE_ID,
-              //emotion: voice,
-              //rate: parseFloat(speed),
-            },
-            knowledgeBase: PROMPT,
-          },
+      await avatarRef.current.createStartAvatar({
+        quality: AvatarQuality.High,
+        avatarName: AVATAR_ID,
+        voice: {
+          voiceId: VOICE_ID,
         },
-        setDebug,
-      );
-
-      setAvatarSessionData(res);
-      setAvatarStream(avatarRef.current.mediaStream);
+        knowledgeBase: PROMPT,
+      });
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(
         `There was an error starting the session. ${VOICE_ID ? "This custom voice ID may not be supported." : ""}`,
       );
+    } finally {
+      setInitialized(true);
     }
-    setIsLoadingSession(false);
   }
 
   async function speakWelcomeMessage() {
@@ -173,49 +195,15 @@ export default function InteractiveAvatar() {
     // otherwise get avatar to say hello again
     if (messages.length > 1) {
       setInput("Please say hello again");
-      handleSubmit();
+      //handleSubmit();
+      handleChat();
 
       return;
     }
 
-    await avatarRef.current
-      .speak({
-        taskRequest: { text: WELCOME, sessionId: avatarSessionData?.sessionId },
-      })
-      .catch((e) => {
-        setDebug(e.message);
-      });
-  }
-
-  async function updateToken() {
-    const newToken = await fetchAccessToken();
-
-    console.log("Updating Access Token:", newToken); // Log token for debugging
-
-    avatarRef.current = new StreamingAvatarApi(
-      new Configuration({ accessToken: newToken }),
-    );
-
-    const startTalkCallback = (e: any) => {
-      console.log("Avatar started talking", e);
-
-      setIsSpeaking(true);
-    };
-
-    const stopTalkCallback = (e: any) => {
-      console.log("Avatar stopped talking", e);
-
-      setIsSpeaking(false);
-    };
-
-    console.log("Adding event handlers:", avatarRef.current);
-    avatarRef.current.addEventHandler(
-      "avatar_start_talking",
-      startTalkCallback,
-    );
-    avatarRef.current.addEventHandler("avatar_stop_talking", stopTalkCallback);
-
-    setInitialized(true);
+    await avatarRef.current.speak({ text: WELCOME }).catch((e) => {
+      setDebug(e.message);
+    });
   }
 
   async function handleInterrupt() {
@@ -224,13 +212,9 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    await avatarRef.current
-      .interrupt({
-        interruptRequest: { sessionId: avatarSessionData?.sessionId },
-      })
-      .catch((e) => {
-        setDebug(e.message);
-      });
+    await avatarRef.current.interrupt().catch((e) => {
+      setDebug(e.message);
+    });
   }
 
   async function endSession() {
@@ -250,10 +234,7 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    await avatarRef.current.stopAvatar(
-      { stopSessionRequest: { sessionId: avatarSessionData?.sessionId } },
-      setDebug,
-    );
+    await avatarRef.current.stopAvatar();
     setAvatarStream(undefined);
   }
 
@@ -261,10 +242,10 @@ export default function InteractiveAvatar() {
     async function init() {
       const newToken = await fetchAccessToken();
 
-      console.log("Initializing with Access Token:", newToken); // Log token for debugging
-      avatarRef.current = new StreamingAvatarApi(
-        new Configuration({ accessToken: newToken, jitterBuffer: 200 }),
-      );
+      //console.log("Initializing with Access Token:", newToken); // Log token for debugging
+      avatarRef.current = new StreamingAvatar({
+        token: newToken,
+      });
       setInitialized(true); // Set initialized to true
     }
     init();
@@ -327,7 +308,8 @@ export default function InteractiveAvatar() {
     // send the input immediately
     if (input.trim() !== "") {
       setIsLoadingChat(true);
-      handleSubmit();
+      //handleSubmit();
+      handleChat();
     }
     setIsTranscriptionWaiting(false);
   }, [input]);
@@ -472,7 +454,8 @@ export default function InteractiveAvatar() {
                           return;
                         }
                         setIsLoadingChat(true);
-                        handleSubmit();
+                        //handleSubmit();
+                        handleChat();
                       }}
                     />
                   </div>
