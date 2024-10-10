@@ -1,4 +1,4 @@
-import { NewSessionRequestVoiceEmotionEnum } from "@heygen/streaming-avatar";
+import { VoiceEmotion } from "@heygen/streaming-avatar";
 import { Select, SelectItem } from "@nextui-org/react";
 import { useState } from "react";
 
@@ -9,7 +9,7 @@ interface VoiceSpeedSettingsProps {
 export default function VoiceSpeedSettings({
   isDisabled = false,
 }: VoiceSpeedSettingsProps) {
-  const [voice, setVoice] = useState<NewSessionRequestVoiceEmotionEnum>("Excited");
+  const [voice, setVoice] = useState<VoiceEmotion>(VoiceEmotion.EXCITED);
   const [speed, setSpeed] = useState<string>("1.00");
 
   const voices = [
@@ -41,7 +41,7 @@ export default function VoiceSpeedSettings({
         selectedKeys={new Set([voice])}
         selectionMode="single"
         onChange={(e) => {
-          setVoice(e.target.value as NewSessionRequestVoiceEmotionEnum);
+          setVoice(e.target.value as VoiceEmotion);
         }}
       >
         {(item) => <SelectItem key={item.voice}>{item.voice}</SelectItem>}
