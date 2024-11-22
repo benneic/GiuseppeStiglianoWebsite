@@ -7,7 +7,7 @@ interface AvatarTextInputProps {
   setValue: (value: string) => void;
   isDisabled?: boolean;
   isLoading?: boolean;
-  isRecording?: boolean;
+  isUserTalking?: boolean;
   onSubmit: () => void;
 }
 
@@ -18,7 +18,7 @@ export default function AvatarTextInput({
   setValue,
   isDisabled = false,
   isLoading = false,
-  isRecording = false,
+  isUserTalking = false,
 }: AvatarTextInputProps) {
   function handleSubmit() {
     if (value.trim() === "") {
@@ -33,9 +33,7 @@ export default function AvatarTextInput({
       <input
         className="block w-full h-12 p-3 text-sm text-gray-900 rounded-large"
         disabled={isDisabled}
-        placeholder={
-          isRecording ? "Listening. Press ↑ to send your message." : placeholder
-        }
+        placeholder={placeholder}
         value={value}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
           setValue(event.target.value);
@@ -47,16 +45,16 @@ export default function AvatarTextInput({
         }}
       />
       <div className="absolute end-0.5 bottom-0.5 top-0.5">
-        {isRecording ? (
+        {isDisabled && isUserTalking && (
           <Button
-            className="h-11"
+            className={"h-11"}
             color="primary"
-            isDisabled={true}
+            //isDisabled={true}
             isIconOnly={true}
             radius="md"
             size="lg"
             variant="solid"
-            onClick={handleSubmit}
+            //onClick={handleSubmit}
           >
             <Image
               alt="Sound wave"
@@ -65,7 +63,8 @@ export default function AvatarTextInput({
               width={125}
             />
           </Button>
-        ) : (
+        )}
+        {!isDisabled && (
           <Tooltip color="foreground" content="Send message" showArrow={true}>
             {isLoading ? (
               <Spinner
@@ -93,6 +92,3 @@ export default function AvatarTextInput({
     </div>
   );
 }
-
-
-// onChange={(event: React.ChangeEvent<HTMLInputElement>) => {setValue(event.target.value);}}

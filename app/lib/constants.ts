@@ -1,3 +1,8 @@
+export const enum CHAT_MODE {
+  VOICE = "voice_mode",
+  TEXT = "text_mode",
+}
+
 //export const AVATAR_ID = "3a9fdc348147403598eda4fd4589ce60"; // OLD
 export const AVATAR_ID = "2ede931b120d4af89c93e14dee9e7e3b"; // NEW 2024-07-29
 
