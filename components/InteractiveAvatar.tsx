@@ -6,9 +6,8 @@ import StreamingAvatar, {
   TaskMode,
   TaskType,
 } from "@heygen/streaming-avatar";
-import { Microphone } from "@icon-park/react";
+import { Close, CloseSmall, Microphone } from "@icon-park/react";
 import { Button, Tooltip, Spinner } from "@nextui-org/react";
-import { Close } from "@icon-park/react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
@@ -238,7 +237,7 @@ export default function InteractiveAvatar() {
                         ) : (
                           <>
                             <div className="absolute h-full w-full bg-red-500 animate-pulse -z-10" />
-                            ⏹
+                            <CloseSmall size={20} theme="outline" />
                           </>
                         )}
                       </Button>
@@ -250,7 +249,7 @@ export default function InteractiveAvatar() {
                       placeholder={
                         chatMode == CHAT_MODE.TEXT
                           ? "Type or press the mic to talk to me"
-                          : "Listening. Press ⏹ to stop recording."
+                          : "Listening. Press X to stop recording."
                       }
                       setValue={setText}
                       value={text}
